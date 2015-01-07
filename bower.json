@@ -1,0 +1,24 @@
+{
+  "name": "tetris",
+  "version": "0.1.0",
+  "description": "Add a game of tetris to your site",
+  "main": "tetris.jquery.js",
+  "license": "MIT",
+  "authors": [
+    "Aerolab <hey@aerolab.co>"
+  ],
+  "keywords": [
+    "jquery",
+    "ui",
+    "scrolling",
+    "header",
+    "midnight"
+  ],
+  "ignore": [
+    "assets",
+    "index.html",
+    "AUTHORS.txt",
+    "gulpfile.js",
+    "package.json"
+  ]
+}
