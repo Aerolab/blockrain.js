@@ -340,34 +340,28 @@ $.fn.tetris = function( customOptions ) {
       x = x * block_size;
       y = y * block_size;
 
-      var borderWidth = 1; 
+      var borderWidth = 2; 
       var borderDistance = Math.round(block_size*0.23);
 
-      // Draw the outline (borders)
-      if( typeof options.theme.stroke === 'string' ) {
-        // Draw the borders
-        _ctx.globalAlpha = 1.0;
-        _ctx.fillStyle = options.theme.stroke;
-        _ctx.fillRect(x-borderWidth, y-borderWidth, block_size+borderWidth*2, block_size+borderWidth*2);
-      }
-
-
-      // Draw the main shape
+      // Draw the main square
       _ctx.globalAlpha = 1.0;
       _ctx.fillStyle = color;
-      if( typeof options.theme.stroke === 'string' ) {
-        _ctx.fillRect(x+borderWidth, y+borderWidth, block_size-borderWidth*2, block_size-borderWidth*2);
-      } else {
-        _ctx.fillRect(x, y, block_size, block_size);
-      }
+      _ctx.fillRect(x, y, block_size, block_size);
 
-
-      // Draw the inner dashes
+      // Decoration (borders)
       if( typeof options.theme.stroke === 'string' ) {
         _ctx.globalAlpha = 1.0;
         _ctx.fillStyle = options.theme.stroke;
-        _ctx.fillRect(x+borderWidth*borderDistance, y+borderWidth*borderDistance, block_size-borderWidth*borderDistance*2, borderWidth*2);
-        _ctx.fillRect(x+borderWidth*borderDistance, y+borderWidth*borderDistance, borderWidth*2, block_size-borderWidth*borderDistance*2);
+        _ctx.strokeStyle = options.theme.stroke;
+        _ctx.lineWidth = borderWidth;
+
+        // Draw the borders
+        _ctx.strokeRect(x, y, block_size, block_size);
+
+        // Draw the inner dashes
+        _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
+        // The rects shouldn't overlap, to prevent issues with transparency
+        _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
       }
 
       // Return the alpha back to 1.0 so we don't create any issues with other drawings.
