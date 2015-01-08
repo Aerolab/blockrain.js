@@ -2,25 +2,87 @@ html, body {
   background: white;
   padding: 0;
   margin: 0;
-  font-family: "Roboto", "Arial", sans-serif;
+  font-family: "Orbitron", "Arial", sans-serif;
   line-height: 160%;
   font-size: 16px;
   color: #303030;
 }
 
+
+/* Stuff */
+.btn {
+  position: relative;
+  display: inline-block;
+  background: none;
+  color: #ffffff;
+  text-decoration: none;
+  border: 2px solid #ffffff;
+  padding: 15px 30px;
+  text-align: center;
+}
+.btn::before {
+  position: absolute;
+  content: "";
+  top: 100%;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  border: 2px solid #ffffff;
+  border-top: none;
+  border-right: none;
+  transition: all 0.2s ease;
+}
+.btn::after {
+  position: absolute;
+  content: "";
+  top: 0px;
+  left: 100%;
+  bottom: 0px;
+  right: 0px;
+  border: 2px solid #ffffff;
+  border-left: none;
+  border-bottom: none;
+  transition: all 0.2s ease;
+}
+
+.btn:hover::before {
+  left: 5px;
+  bottom: -8px;
+  right: -8px;
+}
+.btn:hover::after {
+  top: 5px;
+  bottom: -8px;
+  right: -8px;
+}
+
+
+
 header {
   position: relative;
-  min-height: 500px;
+  min-height: 600px;
+  background: #000000;
+  color: #ffffff;
 }
 header .welcome {
   position: relative;
   z-index: 10;
   text-align: center;
   padding: 150px 0;
-  color: #303030;
 }
 header h1 {
   font-size: 60px;
+  text-transform: uppercase;
+}
+header p {
+  font-size: 20px;
+  font-weight: normal;
+}
+header .buttons {
+  margin-top: 40px;
+}
+header .buttons .btn {
+  margin: 0px 15px;
 }
 
 #cover-tetris {

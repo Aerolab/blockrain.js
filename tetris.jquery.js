@@ -53,9 +53,24 @@ $.fn.safekeypress = function(func, cfg) {
 $.fn.tetris = function( customOptions ) {
 
   $.fn.tetris['themes'] = {
+    'modern': {
+      primary: null,
+      secondary: null,
+      stroke: null,
+      blocks: {
+        line:     '#fa1e1e',
+        square:   '#f1fa1e',
+        arrow:    '#d838cb',
+        rightHook:'#f5821f',
+        leftHook: '#42c6f0',
+        rightZag: '#4bd838',
+        leftZag:  '#fa1e1e'
+      }
+    },
     'retro': {
       primary: null,
       secondary: null,
+      stroke: '#000000',
       blocks: {
         line:     '#fa1e1e',
         square:   '#f1fa1e',
@@ -67,9 +82,14 @@ $.fn.tetris = function( customOptions ) {
       }
     },
     'monochrome': {
+      primary: '#ffffff',
+      secondary: '#ffffff',
+      stroke: '#000000'
+    },
+    'aerolab': {
       primary: '#ff7b00',
       secondary: '#000000'
-    },
+    }
   };
 
   return this.each(function() {
@@ -82,7 +102,9 @@ $.fn.tetris = function( customOptions ) {
       autoBlockWidth: false,
       autoBlockSize: 24,
       difficulty: 'normal',
-      onStart: function(){}
+      onStart: function(){},
+      onRestart: function(){},
+      onGameOver: function(){}
     };
 
     if( typeof customOptions !== "object" ) {
@@ -90,8 +112,15 @@ $.fn.tetris = function( customOptions ) {
     }
     options = $.extend(options, customOptions);
 
+    if( typeof options.theme === 'string' ) {
+      options.theme = $.fn.tetris.themes[options.theme];
+    }
+
     var $game = $(this);
-    $game.html('');
+    var $gameholder = $('<div class="tetris-game-holder"></div>');
+    $game.html('').append($gameholder);
+
+    $gameholder.css('position', 'relative').css('width', '100%').css('height', '100%');
 
     if( options.autoBlockWidth ) {
       options.blockWidth = Math.ceil( $game.width() / options.autoBlockSize );
@@ -100,7 +129,7 @@ $.fn.tetris = function( customOptions ) {
 
     // Create the canvas
     var $canvas = $('<canvas style="width:100%; height:100%; display:block;" />');
-    $game.append($canvas);
+    $gameholder.append($canvas);
 
     // Score
     var $score = $(
@@ -111,7 +140,7 @@ $.fn.tetris = function( customOptions ) {
         '</div>'+
       '</div>');
     var $scoreText = $score.find('.tetris-score-num');
-    $game.append($score);
+    $gameholder.append($score);
 
     // Create the start menu
     var $start = $(
@@ -120,7 +149,7 @@ $.fn.tetris = function( customOptions ) {
           '<button class="tetris-start-btn btn">Play Tetris</button>'+
         '</div>'+
       '</div>');
-    $game.append($start);
+    $gameholder.append($start);
     
     $start.find('.tetris-start-btn').click(function(event){
       event.preventDefault();
@@ -143,9 +172,9 @@ $.fn.tetris = function( customOptions ) {
       $start.fadeOut(200);
       $gameover.fadeOut(200);
       startBoard();
-      options.onStart();
+      options.onRestart();
     });
-    $game.append($gameover);
+    $gameholder.append($gameover);
 
 
     var getNiceShapes = function(shapeFactory, undefined) {
@@ -280,7 +309,7 @@ $.fn.tetris = function( customOptions ) {
         PIXEL_WIDTH = $game.innerWidth(),
         PIXEL_HEIGHT = $game.innerHeight(),
         block_size = Math.floor(PIXEL_WIDTH / WIDTH),
-        bevel_size = Math.floor(block_size / 10),
+        bevel_size = Math.floor(block_size / 5),
         border_width = 2,
         autopilot = false;
 
@@ -323,16 +352,29 @@ $.fn.tetris = function( customOptions ) {
       x = x * block_size;
       y = y * block_size;
 
-      _ctx.fillStyle = color;
+      var borderWidth = 2; 
+      var borderDistance = Math.round(block_size*0.23);
 
-      // Draw the main shape
+      // Draw the main square
       _ctx.globalAlpha = 1.0;
+      _ctx.fillStyle = color;
       _ctx.fillRect(x, y, block_size, block_size);
-      /*
-      // Draw the "bevel"
-      _ctx.globalAlpha = 1.0;
-      _ctx.fillRect(x + bevel_size, y + bevel_size, block_size - 2*bevel_size, block_size - 2*bevel_size);
-      */
+
+      // Decoration (borders)
+      if( typeof options.theme.stroke === 'string' ) {
+        _ctx.globalAlpha = 1.0;
+        _ctx.fillStyle = options.theme.stroke;
+        _ctx.strokeStyle = options.theme.stroke;
+        _ctx.lineWidth = borderWidth;
+
+        // Draw the borders
+        _ctx.strokeRect(x, y, block_size, block_size);
+
+        // Draw the inner dashes
+        _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
+        // The rects shouldn't overlap, to prevent issues with transparency
+        _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
+      }
 
       // Return the alpha back to 1.0 so we don't create any issues with other drawings.
       _ctx.globalAlpha = 1.0;
@@ -592,6 +634,10 @@ $.fn.tetris = function( customOptions ) {
           this.score += scores[numLines];
           $scoreText.text(this.score);
         },
+        _resetScore: function() {
+          this.score = 0;
+          $scoreText.text(this.score);
+        },
         draw: function() {
           for (var i=0, len=this.data.length, row, color; i<len; i++) {
             if (this.data[i] !== undefined) {
@@ -730,14 +776,16 @@ $.fn.tetris = function( customOptions ) {
               }
             }
 
-            // draw it!
+            // Draw the tetris field
             ctx.clearRect(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
             filled.draw();
             this.cur.draw(drop);
-            //info.draw();
           }
 
           if( gameOver ) {
+
+            options.onGameOver(filled.score);
+
             if( autopilot ) {
               // On autoplay, restart the game automatically
               startBoard();
@@ -776,6 +824,7 @@ $.fn.tetris = function( customOptions ) {
 
     function startBoard(evt) {
       filled.clearAll();
+      filled._resetScore();
       board.started = true;
       board.animate();
       return false;

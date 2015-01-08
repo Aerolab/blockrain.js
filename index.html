@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Tetris.js - A tetris game in HTML5 + Javascript (with autoplay!)</title>
-
+  <title>Blockrain.js - A tetris game in HTML5 + Javascript (with autoplay!)</title>
+  <link href='http://fonts.googleapis.com/css?family=Orbitron:400,900,700,500' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Roboto:500' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="assets/css/style.css">
 
@@ -13,8 +13,13 @@
 <section id="hero">
 
   <div class="welcome">
-    <h1>Tetris.js</h1>
-    <p>Play tetris on your site</p>
+    <h1>BlockRain.js</h1>
+    <p>Play <strong>Tetris</strong> on your site</p>
+
+    <div class="buttons">
+      <a href="blockrain.min.js" class="btn btn-download">Download</a>
+      <a href="https://github.com/Aerolab/blockrain.js" class="btn btn-github">Fork on GitHub</a>
+    </div>
   </div>
 
   <div class="game" id="cover-tetris"></div>
@@ -56,12 +61,17 @@
     autoplay: true,
     speed: 10, 
     autoBlockWidth: true,
-    autoBlockSize: 25
+    autoBlockSize: 25,
+    theme: 'modern'
   });
-  
+
   $('#tetris-versus-1, #tetris-versus-2').tetris({
     autoplay: true,
-    speed: 10
+    speed: 10,
+    theme: 'monochrome',
+    onGameOver: function(){
+
+    }
   });
 
   $('#tetris-hipster').tetris({
