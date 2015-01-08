@@ -42,51 +42,6 @@ $.fn.safekeypress = function(func, cfg) {
 
 $.fn.blockrain = function( customOptions ) {
 
-  $.fn.blockrain['themes'] = {
-    'modern': {
-      primary: null,
-      secondary: null,
-      stroke: null,
-      blocks: {
-        line:     '#fa1e1e',
-        square:   '#f1fa1e',
-        arrow:    '#d838cb',
-        rightHook:'#f5821f',
-        leftHook: '#42c6f0',
-        rightZag: '#4bd838',
-        leftZag:  '#fa1e1e'
-      }
-    },
-    'retro': {
-      primary: null,
-      secondary: null,
-      stroke: '#000000',
-      blocks: {
-        line:     '#fa1e1e',
-        square:   '#f1fa1e',
-        arrow:    '#d838cb',
-        rightHook:'#f5821f',
-        leftHook: '#42c6f0',
-        rightZag: '#4bd838',
-        leftZag:  '#fa1e1e'
-      }
-    },
-    'monochrome': {
-      primary: '#ffffff',
-      secondary: '#ffffff',
-      stroke: '#000000'
-    },
-    'aerolab': {
-      primary: '#ff7b00',
-      secondary: '#000000'
-    },
-    'chocolate': {
-      primary: '#7B3F00',
-      secondary: '#7B3F00',
-      stroke: '#291811'
-    }
-  };
-
   return this.each(function() {
 
     var options = {
@@ -148,8 +103,6 @@ $.fn.blockrain = function( customOptions ) {
     
     $start.find('.blockrain-start-btn').click(function(event){
       event.preventDefault();
-      $start.fadeOut(200);
-      $gameover.fadeOut(200);
       startBoard();
       options.onStart();
     });
@@ -164,8 +117,6 @@ $.fn.blockrain = function( customOptions ) {
       '</div>');
     $gameover.find('.blockrain-game-over-btn').click(function(event){
       event.preventDefault();
-      $start.fadeOut(200);
-      $gameover.fadeOut(200);
       startBoard();
       options.onRestart();
     });
@@ -822,6 +773,10 @@ $.fn.blockrain = function( customOptions ) {
       filled._resetScore();
       board.started = true;
       board.animate();
+
+      $start.fadeOut(150);
+      $gameover.hide(150);
+
       return false;
     }
 
@@ -831,9 +786,6 @@ $.fn.blockrain = function( customOptions ) {
     if( options.autoplay ) {
       // On autoplay, start the game right away
       autopilot = true;
-
-      $start.hide();
-      $gameover.hide();
       startBoard();
     }
     else {
@@ -870,4 +822,53 @@ $.fn.blockrain = function( customOptions ) {
 
   });
 
+};
+
+
+/**
+ * Themes. You can add more custom themes to this object.
+ */
+$.fn.blockrain['themes'] = {
+  'modern': {
+    primary: null,
+    secondary: null,
+    stroke: null,
+    blocks: {
+      line:     '#fa1e1e',
+      square:   '#f1fa1e',
+      arrow:    '#d838cb',
+      rightHook:'#f5821f',
+      leftHook: '#42c6f0',
+      rightZag: '#4bd838',
+      leftZag:  '#fa1e1e'
+    }
+  },
+  'retro': {
+    primary: null,
+    secondary: null,
+    stroke: '#000000',
+    blocks: {
+      line:     '#fa1e1e',
+      square:   '#f1fa1e',
+      arrow:    '#d838cb',
+      rightHook:'#f5821f',
+      leftHook: '#42c6f0',
+      rightZag: '#4bd838',
+      leftZag:  '#fa1e1e'
+    }
+  },
+  'monochrome': {
+    primary: '#ffffff',
+    secondary: '#ffffff',
+    stroke: '#000000'
+  },
+  'aerolab': {
+    primary: '#ff7b00',
+    secondary: '#000000'
+  },
+  'chocolate': {
+    primary: '#7B3F00',
+    secondary: '#7B3F00',
+    stroke: '#291811'
+  }
 };
