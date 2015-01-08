@@ -1,5 +1,5 @@
 {
-  "name": "Tetris.JS",
+  "name": "Blockrain.JS",
   "version": "0.1.0",
   "description": "Add a game of tetris to your site",
   "devDependencies": {
@@ -10,11 +10,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Aerolab/tetris.js"
+    "url": "https://github.com/Aerolab/blockrain.js"
   },
   "author": "Aerolab",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Aerolab/tetris.js/issues"
+    "url": "https://github.com/Aerolab/blockrain.js/issues"
   }
 }

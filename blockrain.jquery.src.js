@@ -1,6 +1,6 @@
 /**
- * Tetris.js is based on http://mrcoles.com/tetris/
- * I haven't seen it on github, but it's one of the better js tetris clones out there
+ * BlockRain.js is based on http://mrcoles.com/tetris/
+ * I haven't seen it on github, but it's one of the better js Tetris clones out there
  */
 
 $.fn.safekeypress = function(func, cfg) {
@@ -40,9 +40,9 @@ $.fn.safekeypress = function(func, cfg) {
 };
 
 
-$.fn.tetris = function( customOptions ) {
+$.fn.blockrain = function( customOptions ) {
 
-  $.fn.tetris['themes'] = {
+  $.fn.blockrain['themes'] = {
     'modern': {
       primary: null,
       secondary: null,
@@ -79,6 +79,11 @@ $.fn.tetris = function( customOptions ) {
     'aerolab': {
       primary: '#ff7b00',
       secondary: '#000000'
+    },
+    'chocolate': {
+      primary: '#7B3F00',
+      secondary: '#7B3F00',
+      stroke: '#291811'
     }
   };
 
@@ -87,7 +92,7 @@ $.fn.tetris = function( customOptions ) {
     var options = {
       autoplay: false,
       showFieldOnStart: true,
-      theme: $.fn.tetris.themes['retro'],
+      theme: $.fn.blockrain.themes['retro'],
       blockWidth: 10,
       autoBlockWidth: false,
       autoBlockSize: 24,
@@ -103,11 +108,11 @@ $.fn.tetris = function( customOptions ) {
     options = $.extend(options, customOptions);
 
     if( typeof options.theme === 'string' ) {
-      options.theme = $.fn.tetris.themes[options.theme];
+      options.theme = $.fn.blockrain.themes[options.theme];
     }
 
     var $game = $(this);
-    var $gameholder = $('<div class="tetris-game-holder"></div>');
+    var $gameholder = $('<div class="blockrain-game-holder"></div>');
     $game.html('').append($gameholder);
 
     $gameholder.css('position', 'relative').css('width', '100%').css('height', '100%');
@@ -123,25 +128,25 @@ $.fn.tetris = function( customOptions ) {
 
     // Score
     var $score = $(
-      '<div class="tetris-score-holder" style="position:absolute; top:0; right:0; ">'+
-        '<div class="tetris-score">'+
-          '<div class="tetris-score-msg">Score</div>'+
-          '<div class="tetris-score-num">0</div>'+
+      '<div class="blockrain-score-holder" style="position:absolute; top:0; right:0; ">'+
+        '<div class="blockrain-score">'+
+          '<div class="blockrain-score-msg">Score</div>'+
+          '<div class="blockrain-score-num">0</div>'+
         '</div>'+
       '</div>');
-    var $scoreText = $score.find('.tetris-score-num');
+    var $scoreText = $score.find('.blockrain-score-num');
     $gameholder.append($score);
 
     // Create the start menu
     var $start = $(
-      '<div class="tetris-start-holder" style="position:absolute; top:0; left:0; right:0; bottom:0;">'+
-        '<div class="tetris-start">'+
-          '<button class="tetris-start-btn btn">Play Tetris</button>'+
+      '<div class="blockrain-start-holder" style="position:absolute; top:0; left:0; right:0; bottom:0;">'+
+        '<div class="blockrain-start">'+
+          '<button class="blockrain-start-btn">Play blockrain</button>'+
         '</div>'+
       '</div>');
     $gameholder.append($start);
     
-    $start.find('.tetris-start-btn').click(function(event){
+    $start.find('.blockrain-start-btn').click(function(event){
       event.preventDefault();
       $start.fadeOut(200);
       $gameover.fadeOut(200);
@@ -151,13 +156,13 @@ $.fn.tetris = function( customOptions ) {
 
     // Create the game over menu
     var $gameover = $(
-      '<div class="tetris-game-over-holder" style="position:absolute; top:0; left:0; right:0; bottom:0; display:none;">'+
-        '<div class="tetris-game-over">'+
-          '<div class="tetris-game-over-msg">Game Over</div>'+
-          '<button class="tetris-game-over-btn btn">Play Again</button>'+
+      '<div class="blockrain-game-over-holder" style="position:absolute; top:0; left:0; right:0; bottom:0; display:none;">'+
+        '<div class="blockrain-game-over">'+
+          '<div class="blockrain-game-over-msg">Game Over</div>'+
+          '<button class="blockrain-game-over-btn">Play Again</button>'+
         '</div>'+
       '</div>');
-    $gameover.find('.tetris-game-over-btn').click(function(event){
+    $gameover.find('.blockrain-game-over-btn').click(function(event){
       event.preventDefault();
       $start.fadeOut(200);
       $gameover.fadeOut(200);
@@ -671,7 +676,7 @@ $.fn.tetris = function( customOptions ) {
 
           var start = [], colors = [], i, ilen, j, jlen, color;
 
-          // Draw a random tetris screen
+          // Draw a random blockrain screen
           for( var i in shapeFactory ) {
             colors.push( getBlockColor(i, false) );
           }
@@ -766,7 +771,7 @@ $.fn.tetris = function( customOptions ) {
               }
             }
 
-            // Draw the tetris field
+            // Draw the blockrain field
             ctx.clearRect(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
             filled.draw();
             this.cur.draw(drop);

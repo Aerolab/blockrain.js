@@ -13,12 +13,12 @@ var getCopyright = function () {
 };
 
 gulp.task('build', function () {
-    gulp.src('./tetris.jquery.src.js')
+    gulp.src('./blockrain.jquery.src.js')
     .pipe(header(getCopyright(), {version: getVersion()}))
-    .pipe(concat('tetris.jquery.js'))
+    .pipe(concat('blockrain.jquery.js'))
     .pipe(gulp.dest('./'))
     .pipe(uglify({preserveComments:'some'}))
-    .pipe(concat('tetris.jquery.min.js'))
+    .pipe(concat('blockrain.jquery.min.js'))
     .pipe(gulp.dest('./'));
 });
 
