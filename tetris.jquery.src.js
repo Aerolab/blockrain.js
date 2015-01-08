@@ -72,9 +72,14 @@ $.fn.tetris = function( customOptions ) {
       }
     },
     'monochrome': {
+      primary: '#ffffff',
+      secondary: '#ffffff',
+      stroke: '#000000'
+    },
+    'aerolab': {
       primary: '#ff7b00',
       secondary: '#000000'
-    },
+    }
   };
 
   return this.each(function() {
@@ -100,7 +105,10 @@ $.fn.tetris = function( customOptions ) {
     }
 
     var $game = $(this);
-    $game.html('');
+    var $gameholder = $('<div class="tetris-game-holder"></div>');
+    $game.html('').append($gameholder);
+
+    $gameholder.css('position', 'relative').css('width', '100%').css('height', '100%');
 
     if( options.autoBlockWidth ) {
       options.blockWidth = Math.ceil( $game.width() / options.autoBlockSize );
@@ -109,7 +117,7 @@ $.fn.tetris = function( customOptions ) {
 
     // Create the canvas
     var $canvas = $('<canvas style="width:100%; height:100%; display:block;" />');
-    $game.append($canvas);
+    $gameholder.append($canvas);
 
     // Score
     var $score = $(
@@ -120,7 +128,7 @@ $.fn.tetris = function( customOptions ) {
         '</div>'+
       '</div>');
     var $scoreText = $score.find('.tetris-score-num');
-    $game.append($score);
+    $gameholder.append($score);
 
     // Create the start menu
     var $start = $(
@@ -129,7 +137,7 @@ $.fn.tetris = function( customOptions ) {
           '<button class="tetris-start-btn btn">Play Tetris</button>'+
         '</div>'+
       '</div>');
-    $game.append($start);
+    $gameholder.append($start);
     
     $start.find('.tetris-start-btn').click(function(event){
       event.preventDefault();
@@ -154,7 +162,7 @@ $.fn.tetris = function( customOptions ) {
       startBoard();
       options.onStart();
     });
-    $game.append($gameover);
+    $gameholder.append($gameover);
 
 
     var getNiceShapes = function(shapeFactory, undefined) {
@@ -620,6 +628,10 @@ $.fn.tetris = function( customOptions ) {
           this.score += scores[numLines];
           $scoreText.text(this.score);
         },
+        _resetScore: function() {
+          this.score = 0;
+          $scoreText.text(this.score);
+        },
         draw: function() {
           for (var i=0, len=this.data.length, row, color; i<len; i++) {
             if (this.data[i] !== undefined) {
@@ -804,6 +816,7 @@ $.fn.tetris = function( customOptions ) {
 
     function startBoard(evt) {
       filled.clearAll();
+      filled._resetScore();
       board.started = true;
       board.animate();
       return false;
