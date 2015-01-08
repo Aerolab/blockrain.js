@@ -59,16 +59,24 @@
 <script>
   $('#cover-tetris').blockrain({
     autoplay: true,
-    speed: 10, 
+    speed: 1000,
     autoBlockWidth: true,
     autoBlockSize: 25,
-    theme: 'modern'
+    theme: 'candy'
   });
-
-  $('#tetris-versus-1, #tetris-versus-2').blockrain({
+  
+  $('#tetris-versus-1').blockrain({
     autoplay: true,
     speed: 10,
-    theme: 'monochrome',
+    theme: 'gameboy',
+    onGameOver: function(){
+
+    }
+  });
+  $('#tetris-versus-2').blockrain({
+    autoplay: true,
+    speed: 10,
+    theme: 'vim',
     onGameOver: function(){
 
     }

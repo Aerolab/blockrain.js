@@ -47,7 +47,7 @@ $.fn.blockrain = function( customOptions ) {
     var options = {
       autoplay: false,
       showFieldOnStart: true,
-      theme: $.fn.blockrain.themes['retro'],
+      theme: null,
       blockWidth: 10,
       autoBlockWidth: false,
       autoBlockSize: 24,
@@ -65,6 +65,13 @@ $.fn.blockrain = function( customOptions ) {
     if( typeof options.theme === 'string' ) {
       options.theme = $.fn.blockrain.themes[options.theme];
     }
+    if( typeof options.theme === 'undefined' || options.theme === null ) {
+      options.theme = $.fn.blockrain.themes['retro'];
+    }
+
+    if( isNaN(parseInt(options.theme.strokeWidth)) || typeof parseInt(options.theme.strokeWidth) !== 'number' ) {
+      options.theme.strokeWidth = 2;
+    }
 
     var $game = $(this);
     var $gameholder = $('<div class="blockrain-game-holder"></div>');
@@ -79,6 +86,9 @@ $.fn.blockrain = function( customOptions ) {
 
     // Create the canvas
     var $canvas = $('<canvas style="width:100%; height:100%; display:block;" />');
+    if( typeof options.theme.background === 'string' ) {
+      $canvas.css('background-color', options.theme.background);
+    }
     $gameholder.append($canvas);
 
     // Score
@@ -255,7 +265,6 @@ $.fn.blockrain = function( customOptions ) {
         PIXEL_WIDTH = $game.innerWidth(),
         PIXEL_HEIGHT = $game.innerHeight(),
         block_size = Math.floor(PIXEL_WIDTH / WIDTH),
-        bevel_size = Math.floor(block_size / 5),
         border_width = 2,
         autopilot = false;
 
@@ -268,7 +277,6 @@ $.fn.blockrain = function( customOptions ) {
       PIXEL_HEIGHT = $game.innerHeight();
 
       block_size = Math.floor(PIXEL_WIDTH / WIDTH);
-      bevel_size = Math.floor(block_size / 10);
 
       // Recalculate the pixel width and height so the canvas always has the best possible size
       PIXEL_WIDTH = block_size * WIDTH;
@@ -290,6 +298,40 @@ $.fn.blockrain = function( customOptions ) {
     function randChoice(choices) { return choices[randInt(0, choices.length-1)]; }
 
     /**
+     * Draws the background
+     */
+    function drawBackground(_ctx) {
+      _ctx = _ctx || ctx;
+
+      if( typeof options.theme.background !== 'string' ) {
+        return;
+      }
+
+
+      if( typeof options.theme.backgroundGrid !== 'string' ) {
+        return;
+      }
+
+      var borderWidth = options.theme.strokeWidth;
+      var borderDistance = Math.round(block_size*0.23);
+      var squareDistance = Math.round(block_size*0.30);
+
+      _ctx.globalAlpha = 1.0;
+      _ctx.fillStyle = options.theme.backgroundGrid;
+
+      for( var x=0; x<WIDTH; x++ ) {
+        for( var y=0; y<HEIGHT; y++ ) {
+          var cx = x * block_size;
+          var cy = y * block_size;
+
+          _ctx.fillRect(cx+borderWidth, cy+borderWidth, block_size-borderWidth*2, block_size-borderWidth*2);
+        }
+      }
+
+      _ctx.globalAlpha = 1.0;
+    }
+
+    /**
      * Draws one block (Each piece is made of 4 blocks)
      */
     function drawBlock(x, y, color, _ctx) {
@@ -298,13 +340,24 @@ $.fn.blockrain = function( customOptions ) {
       x = x * block_size;
       y = y * block_size;
 
-      var borderWidth = 2; 
+      var borderWidth = options.theme.strokeWidth;
       var borderDistance = Math.round(block_size*0.23);
+      var squareDistance = Math.round(block_size*0.30);
 
       // Draw the main square
       _ctx.globalAlpha = 1.0;
       _ctx.fillStyle = color;
       _ctx.fillRect(x, y, block_size, block_size);
+
+      // Inner Shadow
+      if( typeof options.theme.innerShadow === 'string' ) {
+        _ctx.globalAlpha = 1.0;
+        _ctx.strokeStyle = options.theme.innerShadow;
+        _ctx.lineWidth = 1.0;
+
+        // Draw the borders
+        _ctx.strokeRect(x+1, y+1, block_size-2, block_size-2);
+      }
 
       // Decoration (borders)
       if( typeof options.theme.stroke === 'string' ) {
@@ -315,11 +368,19 @@ $.fn.blockrain = function( customOptions ) {
 
         // Draw the borders
         _ctx.strokeRect(x, y, block_size, block_size);
-
+      }
+      if( typeof options.theme.innerStroke === 'string' ) {
         // Draw the inner dashes
+        _ctx.fillStyle = options.theme.innerStroke;
         _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
         // The rects shouldn't overlap, to prevent issues with transparency
         _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
+      }
+      if( typeof options.theme.innerSquare === 'string' ) {
+        // Draw the inner square
+        _ctx.fillStyle = options.theme.innerSquare;
+        _ctx.globalAlpha = 0.2;
+        _ctx.fillRect(x+squareDistance, y+squareDistance, block_size-squareDistance*2, block_size-squareDistance*2);
       }
 
       // Return the alpha back to 1.0 so we don't create any issues with other drawings.
@@ -614,13 +675,13 @@ $.fn.blockrain = function( customOptions ) {
     var niceShapes = getNiceShapes(shapeFactory);
 
     var board = {
-        animateDelay: 10,
+        animateDelay: 1000/options.speed,
         cur: null,
 
         lines: 0,
 
         dropCount: 0,
-        dropDelay: 24, //5,
+        dropDelay: 5, //5,
 
         init: function() {
           this.cur = this.nextShape();
@@ -724,6 +785,7 @@ $.fn.blockrain = function( customOptions ) {
 
             // Draw the blockrain field
             ctx.clearRect(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
+            drawBackground();
             filled.draw();
             this.cur.draw(drop);
           }
@@ -768,6 +830,7 @@ $.fn.blockrain = function( customOptions ) {
     info.init();
     board.init();
 
+
     function startBoard(evt) {
       filled.clearAll();
       filled._resetScore();
@@ -775,7 +838,7 @@ $.fn.blockrain = function( customOptions ) {
       board.animate();
 
       $start.fadeOut(150);
-      $gameover.hide(150);
+      $gameover.fadeOut(150);
 
       return false;
     }
@@ -829,6 +892,25 @@ $.fn.blockrain = function( customOptions ) {
  * Themes. You can add more custom themes to this object.
  */
 $.fn.blockrain['themes'] = {
+  'candy': {
+    background: '#040304',
+    backgroundGrid: '#211F22',
+    primary: null,
+    secondary: null,
+    stroke: null,
+    innerStroke: null,
+    innerSquare: '#000000',
+    innerShadow: '#000000',
+    blocks: {
+      line:     '#5BCBF3',
+      square:   '#F2AC3B',
+      arrow:    '#BA009D',
+      rightHook:'#ED8D33',
+      leftHook: '#4350D6',
+      rightZag: '#C33150',
+      leftZag:  '#6BCE2F'
+    }
+  },
   'modern': {
     primary: null,
     secondary: null,
@@ -847,6 +929,7 @@ $.fn.blockrain['themes'] = {
     primary: null,
     secondary: null,
     stroke: '#000000',
+    innerStroke: '#000000',
     blocks: {
       line:     '#fa1e1e',
       square:   '#f1fa1e',
@@ -860,7 +943,8 @@ $.fn.blockrain['themes'] = {
   'monochrome': {
     primary: '#ffffff',
     secondary: '#ffffff',
-    stroke: '#000000'
+    stroke: '#000000',
+    innerStroke: '#000000'
   },
   'aerolab': {
     primary: '#ff7b00',
@@ -869,6 +953,31 @@ $.fn.blockrain['themes'] = {
   'chocolate': {
     primary: '#7B3F00',
     secondary: '#7B3F00',
-    stroke: '#291811'
-  }
+    stroke: '#291811',
+    innerStroke: '#291811'
+  },
+  'gameboy': {
+    background: '#C4CFA1',
+    primary: null,
+    secondary: null,
+    stroke: '#414141',
+    innerStroke: '#414141',
+    blocks: {
+      line:     '#88926A',
+      square:   '#585E44',
+      arrow:    '#A4AC8C',
+      rightHook:'#6B7353',
+      leftHook: '#6B7353',
+      rightZag: '#595F45',
+      leftZag:  '#595F45'
+    }
+  },
+  'vim': {
+    background: '#000000',
+    primary: '#C2FFAE',
+    secondary: '#C2FFAE',
+    stroke: '#000000',
+    strokeWidth: 3,
+    innerStroke: null
+  },
 };
