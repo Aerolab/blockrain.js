@@ -42,32 +42,33 @@ $.fn.safekeypress = function(func, cfg) {
 
 $.fn.blockrain = function( customOptions ) {
 
+  var defaultOptions = {
+    autoplay: false,
+    showFieldOnStart: true,
+    theme: null,
+    blockWidth: 10,
+    autoBlockWidth: false,
+    autoBlockSize: 24,
+    difficulty: 'normal',
+
+    playText: 'Let\'s play some Tetris',
+    playButtonText: 'Play',
+    gameOverText: 'Game Over',
+    restartButtonText: 'Play Again',
+    scoreText: 'Score',
+
+    onStart: function(){},
+    onRestart: function(){},
+    onGameOver: function(){}
+  };
+
   return this.each(function() {
-
-    var options = {
-      autoplay: false,
-      showFieldOnStart: true,
-      theme: null,
-      blockWidth: 10,
-      autoBlockWidth: false,
-      autoBlockSize: 24,
-      difficulty: 'normal',
-
-      playText: 'Let\'s play some Tetris',
-      playButtonText: 'Play',
-      gameOverText: 'Game Over',
-      restartButtonText: 'Play Again',
-      scoreText: 'Score',
-
-      onStart: function(){},
-      onRestart: function(){},
-      onGameOver: function(){}
-    };
 
     if( typeof customOptions !== "object" ) {
       customOptions = {};
     }
-    options = $.extend(options, customOptions);
+    
+    var options = $.extend({}, defaultOptions, customOptions);
 
     if( typeof options.theme === 'string' ) {
       options.theme = $.fn.blockrain.themes[options.theme];
