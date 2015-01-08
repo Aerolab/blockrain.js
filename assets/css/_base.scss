@@ -1,0 +1,29 @@
+section.versus {
+  text-align: center;
+  padding-top: 100px;
+}
+
+section.versus .game {
+  display: inline-block;
+  margin: 0px 20px;
+  width: 200px;
+  height: 500px;
+}
+
+
+section.hipster {
+  text-align: center;
+  padding-top: 100px;
+}
+
+section.hipster .game {
+  display: inline-block;
+  margin: 0px 20px;
+  width: 500px;
+  height: 500px;
+  background: url(images/hipster-bg.jpg) no-repeat 50% 50%;
+  background-size: cover;
+}
+section.hipster .game canvas {
+  opacity: 0.8;
+}

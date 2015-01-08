@@ -1,0 +1,29 @@
+#hero {
+  position: relative;
+  @include display-flex;
+  @include flex-props(row wrap, center, center, center);
+  min-height: 500px;
+  height: 100vh;
+  background: #333;
+  color: #fff;
+
+  .welcome {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 60px;
+    margin: 0;
+  }
+}
+
+#cover-tetris {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}
