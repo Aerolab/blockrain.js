@@ -52,6 +52,13 @@ $.fn.blockrain = function( customOptions ) {
       autoBlockWidth: false,
       autoBlockSize: 24,
       difficulty: 'normal',
+
+      playText: 'Let\'s play some Tetris',
+      playButtonText: 'Play',
+      gameOverText: 'Game Over',
+      restartButtonText: 'Play Again',
+      scoreText: 'Score',
+
       onStart: function(){},
       onRestart: function(){},
       onGameOver: function(){}
@@ -123,7 +130,7 @@ $.fn.blockrain = function( customOptions ) {
     
 
     // Create the canvas
-    var $canvas = $('<canvas style="width:100%; height:100%; display:block;" />');
+    var $canvas = $('<canvas style="display:block; width:100%; height:100%; padding:0; margin:0; border:none;" />');
     if( typeof options.theme.background === 'string' ) {
       $canvas.css('background-color', options.theme.background);
     }
@@ -131,22 +138,23 @@ $.fn.blockrain = function( customOptions ) {
 
     // Score
     var $score = $(
-      '<div class="blockrain-score-holder" style="position:absolute; top:0; right:0; ">'+
+      '<div class="blockrain-score-holder" style="position:absolute;">'+
         '<div class="blockrain-score">'+
-          '<div class="blockrain-score-msg">Score</div>'+
+          '<div class="blockrain-score-msg">'+ options.scoreText +'</div>'+
           '<div class="blockrain-score-num">0</div>'+
         '</div>'+
-      '</div>');
+      '</div>').hide();
     var $scoreText = $score.find('.blockrain-score-num');
     $gameholder.append($score);
 
     // Create the start menu
     var $start = $(
-      '<div class="blockrain-start-holder" style="position:absolute; top:0; left:0; right:0; bottom:0;">'+
+      '<div class="blockrain-start-holder" style="position:absolute;">'+
         '<div class="blockrain-start">'+
-          '<button class="blockrain-start-btn">Play blockrain</button>'+
+          '<div class="blockrain-start-msg">'+ options.playText +'</div>'+
+          '<a class="blockrain-btn blockrain-start-btn">'+ options.playButtonText +'</a>'+
         '</div>'+
-      '</div>');
+      '</div>').hide();
     $gameholder.append($start);
     
     $start.find('.blockrain-start-btn').click(function(event){
@@ -157,12 +165,12 @@ $.fn.blockrain = function( customOptions ) {
 
     // Create the game over menu
     var $gameover = $(
-      '<div class="blockrain-game-over-holder" style="position:absolute; top:0; left:0; right:0; bottom:0; display:none;">'+
+      '<div class="blockrain-game-over-holder" style="position:absolute;">'+
         '<div class="blockrain-game-over">'+
-          '<div class="blockrain-game-over-msg">Game Over</div>'+
-          '<button class="blockrain-game-over-btn">Play Again</button>'+
+          '<div class="blockrain-game-over-msg">'+ options.gameOverText +'</div>'+
+          '<a class="blockrain-btn blockrain-game-over-btn">'+ options.restartButtonText +'</a>'+
         '</div>'+
-      '</div>');
+      '</div>').hide();
     $gameover.find('.blockrain-game-over-btn').click(function(event){
       event.preventDefault();
       startBoard();
@@ -399,7 +407,7 @@ $.fn.blockrain = function( customOptions ) {
       var borderWidth = options.theme.strokeWidth;
       var borderDistance = Math.round(block_size*0.23);
       var squareDistance = Math.round(block_size*0.30);
-      
+
       var color = getBlockColor(blockType, false);
 
       // Draw the main square
@@ -697,7 +705,7 @@ $.fn.blockrain = function( customOptions ) {
             this._popRow(rows[i]);
             board.lines++;
             if (board.lines % 10 == 0 && board.dropDelay > 1) {
-              board.dropDelay -= 2;
+              //board.dropDelay -= 2;
             }
           }
 
@@ -757,21 +765,20 @@ $.fn.blockrain = function( customOptions ) {
         init: function() {
           this.cur = this.nextShape();
 
-          var start = [], colors = [], i, ilen, j, jlen, color;
+          var start = [], blockTypes = [], i, ilen, j, jlen, color;
 
           // Draw a random blockrain screen
-          for( var i in shapeFactory ) {
-            colors.push( getBlockColor(i, false) );
-          }
+          blockTypes = Object.keys(shapeFactory);
 
           for (i=0, ilen=WIDTH; i<ilen; i++) {
             for (j=0, jlen=randChoice([randInt(0, 8), randInt(5, 9)]); j<jlen; j++) {
-              if (!color || !randInt(0, 3)) color = randChoice(colors);
+              if (!color || !randInt(0, 3)) color = randChoice(blockTypes);
               start.push([i, HEIGHT - j, color]);
             }
           }
 
           if( options.showFieldOnStart ) {
+            drawBackground();
             for (i=0, ilen=start.length; i<ilen; i++) {
               drawBlock.apply(drawBlock, start[i]);
             }
@@ -910,6 +917,7 @@ $.fn.blockrain = function( customOptions ) {
 
       $start.fadeOut(150);
       $gameover.fadeOut(150);
+      $score.fadeIn(150);
 
       return false;
     }

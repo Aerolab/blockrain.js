@@ -7,6 +7,7 @@
   <link href='http://fonts.googleapis.com/css?family=Orbitron:400,900,700,500' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="assets/css/normalize.css">
   <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="blockrain.css">
 
 </head>
 <body>
@@ -95,15 +96,12 @@
     }
   });
 
-  $('#tetris-hipster').blockrain({
-    autoplay: true,
-    speed: 10,
+  $('#tetris-hipster').css('width', '300px').css('height', '600px').blockrain({
+    autoplay: false,
+    speed: 20,
     autoBlockWidth: true,
     autoBlockSize: 30,
-    theme: {
-      primary: '#000000',
-      secondary: '#000000'
-    }
+    theme: 'candy'
   });
 </script>
 
