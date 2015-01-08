@@ -1,8 +1,8 @@
 {
-  "name": "tetris",
+  "name": "blockrain",
   "version": "0.1.0",
   "description": "Add a game of tetris to your site",
-  "main": "tetris.jquery.js",
+  "main": "blockrain.jquery.js",
   "license": "MIT",
   "authors": [
     "Aerolab <hey@aerolab.co>"
