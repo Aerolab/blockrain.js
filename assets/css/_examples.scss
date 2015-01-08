@@ -1,0 +1,31 @@
+#examples {
+  padding-top: 0px;
+}
+#example-slider {
+  background: #000;
+  width: 590px;
+  height: 420px;
+  border-radius: 50%/5%;
+  position: relative;
+
+  &:before {
+    content: "";
+    background: #000;
+    position: absolute;
+    top: 5%;
+    bottom: 5%;
+    left: -5%;
+    right: -5%;
+    border-radius: 5%/50%;
+  }
+}
+
+#example-versus {
+  padding: 40px 0;
+  .game {
+    display: inline-block;
+    margin: 0px 20px;
+    width: 200px;
+    height: 350px;
+  }
+}

@@ -1,0 +1,27 @@
+#features {
+  text-align: center;
+  padding-bottom: 20px;
+
+  .feature {
+    width: 280px;
+    height: 340px;
+    float: left;
+    margin: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
+    h2 {
+      font-weight: normal;
+    }
+    p {
+      color: #898989;
+    }
+  }
+
+  &:after {
+    content: "";
+    clear: both;
+    display: block;
+    height: 0;
+    width: 0;
+  }
+}
