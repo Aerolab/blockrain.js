@@ -897,14 +897,23 @@ $.fn.blockrain = function( customOptions ) {
 
 };
 
-
-/**
+/*!
+ * BlockRain.js 0.1.0
+ * jQuery plugin that lets you put a playable (and configurable) game of Tetris in your site or just leave it in auto in the background.
+ * http://aerolab.github.io/blockrain.js/
+ *
+ * Copyright (c) 2015 Aerolab <hey@aerolab.co>
+ *
+ * Released under the MIT license
+ * http://aerolab.github.io/blockrain.js/LICENSE.txt
+ */
+ /**
  * Themes. You can add more custom themes to this object.
  */
 $.fn.blockrain['themes'] = {
   'candy': {
     background: '#040304',
-    backgroundGrid: '#211F22',
+    backgroundGrid: '#101010',
     primary: null,
     secondary: null,
     stroke: null,
@@ -972,6 +981,7 @@ $.fn.blockrain['themes'] = {
     secondary: null,
     stroke: '#414141',
     innerStroke: '#414141',
+    innerSquare: '#000000',
     blocks: {
       line:     '#88926A',
       square:   '#585E44',
