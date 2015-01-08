@@ -92,7 +92,9 @@ $.fn.tetris = function( customOptions ) {
       autoBlockWidth: false,
       autoBlockSize: 24,
       difficulty: 'normal',
-      onStart: function(){}
+      onStart: function(){},
+      onRestart: function(){},
+      onGameOver: function(){}
     };
 
     if( typeof customOptions !== "object" ) {
@@ -160,7 +162,7 @@ $.fn.tetris = function( customOptions ) {
       $start.fadeOut(200);
       $gameover.fadeOut(200);
       startBoard();
-      options.onStart();
+      options.onRestart();
     });
     $gameholder.append($gameover);
 
@@ -764,14 +766,16 @@ $.fn.tetris = function( customOptions ) {
               }
             }
 
-            // draw it!
+            // Draw the tetris field
             ctx.clearRect(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
             filled.draw();
             this.cur.draw(drop);
-            //info.draw();
           }
 
           if( gameOver ) {
+
+            options.onGameOver(filled.score);
+
             if( autopilot ) {
               // On autoplay, restart the game automatically
               startBoard();
