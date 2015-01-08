@@ -79,6 +79,44 @@ $.fn.blockrain = function( customOptions ) {
       options.theme = $.fn.blockrain.themes['retro'];
     }
 
+
+    /**
+     * Find base64 encoded images and load them as image objects, which can be used by the canvas renderer
+     */
+    var preloadThemeAssets = function() {
+      if( typeof options.theme.blocks !== 'undefined' ){
+        var keys = Object.keys(options.theme.blocks);
+        var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
+
+        // Load the blocks
+        for( var i = 0; i < keys.length; i++ ) {
+          options.theme.blocks[ keys[i] ]
+          if( typeof options.theme.blocks[ keys[i] ] === 'string' ) {
+            if( base64check.test( options.theme.blocks[ keys[i] ] ) ) {
+              var base64src = options.theme.blocks[ keys[i] ];
+              options.theme.blocks[ keys[i] ] = new Image();
+              options.theme.blocks[ keys[i] ].src = base64src;
+            }
+          }
+        }
+      }
+
+      // Load the bg
+      if( typeof options.theme.backgroundGrid !== 'undefined' ){
+        if( typeof options.theme.backgroundGrid === 'string' ) {
+          if( base64check.test( options.theme.backgroundGrid ) ) {
+            var base64src = options.theme.backgroundGrid;
+            options.theme.backgroundGrid = new Image();
+            options.theme.backgroundGrid.src = base64src;
+          }
+        }
+      }
+
+    };
+
+    // Load the image assets
+    preloadThemeAssets();
+
     if( isNaN(parseInt(options.theme.strokeWidth)) || typeof parseInt(options.theme.strokeWidth) !== 'number' ) {
       options.theme.strokeWidth = 2;
     }
@@ -317,25 +355,43 @@ $.fn.blockrain = function( customOptions ) {
         return;
       }
 
+      if( options.theme.backgroundGrid instanceof Image ) {
 
-      if( typeof options.theme.backgroundGrid !== 'string' ) {
-        return;
-      }
+        // Not loaded
+        if( options.theme.backgroundGrid.width === 0 || options.theme.backgroundGrid.height === 0 ){ return; }
 
-      var borderWidth = options.theme.strokeWidth;
-      var borderDistance = Math.round(block_size*0.23);
-      var squareDistance = Math.round(block_size*0.30);
+        _ctx.globalAlpha = 1.0;
 
-      _ctx.globalAlpha = 1.0;
-      _ctx.fillStyle = options.theme.backgroundGrid;
+        for( var x=0; x<WIDTH; x++ ) {
+          for( var y=0; y<HEIGHT; y++ ) {
+            var cx = x * block_size;
+            var cy = y * block_size;
 
-      for( var x=0; x<WIDTH; x++ ) {
-        for( var y=0; y<HEIGHT; y++ ) {
-          var cx = x * block_size;
-          var cy = y * block_size;
-
-          _ctx.fillRect(cx+borderWidth, cy+borderWidth, block_size-borderWidth*2, block_size-borderWidth*2);
+            _ctx.drawImage( options.theme.backgroundGrid, 
+                            0, 0, options.theme.backgroundGrid.width, options.theme.backgroundGrid.height, 
+                            cx, cy, block_size, block_size);
+          }
         }
+
+      }
+      else if( typeof options.theme.backgroundGrid === 'string' ) {
+
+        var borderWidth = options.theme.strokeWidth;
+        var borderDistance = Math.round(block_size*0.23);
+        var squareDistance = Math.round(block_size*0.30);
+
+        _ctx.globalAlpha = 1.0;
+        _ctx.fillStyle = options.theme.backgroundGrid;
+
+        for( var x=0; x<WIDTH; x++ ) {
+          for( var y=0; y<HEIGHT; y++ ) {
+            var cx = x * block_size;
+            var cy = y * block_size;
+
+            _ctx.fillRect(cx+borderWidth, cy+borderWidth, block_size-borderWidth*2, block_size-borderWidth*2);
+          }
+        }
+
       }
 
       _ctx.globalAlpha = 1.0;
@@ -344,7 +400,7 @@ $.fn.blockrain = function( customOptions ) {
     /**
      * Draws one block (Each piece is made of 4 blocks)
      */
-    function drawBlock(x, y, color, _ctx) {
+    function drawBlock(x, y, blockType, _ctx) {
       // convert x and y to pixel
       _ctx = _ctx || ctx;
       x = x * block_size;
@@ -353,44 +409,60 @@ $.fn.blockrain = function( customOptions ) {
       var borderWidth = options.theme.strokeWidth;
       var borderDistance = Math.round(block_size*0.23);
       var squareDistance = Math.round(block_size*0.30);
+      
+      var color = getBlockColor(blockType, false);
 
       // Draw the main square
       _ctx.globalAlpha = 1.0;
-      _ctx.fillStyle = color;
-      _ctx.fillRect(x, y, block_size, block_size);
 
-      // Inner Shadow
-      if( typeof options.theme.innerShadow === 'string' ) {
+      // If it's an image, the block has a specific texture. Use that.
+      if( color instanceof Image ) {
         _ctx.globalAlpha = 1.0;
-        _ctx.strokeStyle = options.theme.innerShadow;
-        _ctx.lineWidth = 1.0;
 
-        // Draw the borders
-        _ctx.strokeRect(x+1, y+1, block_size-2, block_size-2);
-      }
+        // Not loaded
+        if( color.width === 0 || color.height === 0 ){ return; }
 
-      // Decoration (borders)
-      if( typeof options.theme.stroke === 'string' ) {
-        _ctx.globalAlpha = 1.0;
-        _ctx.fillStyle = options.theme.stroke;
-        _ctx.strokeStyle = options.theme.stroke;
-        _ctx.lineWidth = borderWidth;
+        _ctx.drawImage(color, 0, 0, color.width, color.height, x, y, block_size, block_size);
 
-        // Draw the borders
-        _ctx.strokeRect(x, y, block_size, block_size);
       }
-      if( typeof options.theme.innerStroke === 'string' ) {
-        // Draw the inner dashes
-        _ctx.fillStyle = options.theme.innerStroke;
-        _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
-        // The rects shouldn't overlap, to prevent issues with transparency
-        _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
-      }
-      if( typeof options.theme.innerSquare === 'string' ) {
-        // Draw the inner square
-        _ctx.fillStyle = options.theme.innerSquare;
-        _ctx.globalAlpha = 0.2;
-        _ctx.fillRect(x+squareDistance, y+squareDistance, block_size-squareDistance*2, block_size-squareDistance*2);
+      else if( typeof color === 'string' )
+      {
+        _ctx.fillStyle = color;
+        _ctx.fillRect(x, y, block_size, block_size);
+
+        // Inner Shadow
+        if( typeof options.theme.innerShadow === 'string' ) {
+          _ctx.globalAlpha = 1.0;
+          _ctx.strokeStyle = options.theme.innerShadow;
+          _ctx.lineWidth = 1.0;
+
+          // Draw the borders
+          _ctx.strokeRect(x+1, y+1, block_size-2, block_size-2);
+        }
+
+        // Decoration (borders)
+        if( typeof options.theme.stroke === 'string' ) {
+          _ctx.globalAlpha = 1.0;
+          _ctx.fillStyle = options.theme.stroke;
+          _ctx.strokeStyle = options.theme.stroke;
+          _ctx.lineWidth = borderWidth;
+
+          // Draw the borders
+          _ctx.strokeRect(x, y, block_size, block_size);
+        }
+        if( typeof options.theme.innerStroke === 'string' ) {
+          // Draw the inner dashes
+          _ctx.fillStyle = options.theme.innerStroke;
+          _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
+          // The rects shouldn't overlap, to prevent issues with transparency
+          _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
+        }
+        if( typeof options.theme.innerSquare === 'string' ) {
+          // Draw the inner square
+          _ctx.fillStyle = options.theme.innerSquare;
+          _ctx.globalAlpha = 0.2;
+          _ctx.fillRect(x+squareDistance, y+squareDistance, block_size-squareDistance*2, block_size-squareDistance*2);
+        }
       }
 
       // Return the alpha back to 1.0 so we don't create any issues with other drawings.
@@ -425,7 +497,7 @@ $.fn.blockrain = function( customOptions ) {
     };
 
 
-    function Shape(orientations, color, symmetrical, blockType) {
+    function Shape(orientations, symmetrical, blockType) {
 
       $.extend(this, {
         x: 0,
@@ -440,7 +512,6 @@ $.fn.blockrain = function( customOptions ) {
           return this;
         },
         blockType: blockType,
-        color: color,
         blocksLen: orientations[0].length,
         orientations: orientations,
         orientation: 0, // 4 possible
@@ -473,7 +544,7 @@ $.fn.blockrain = function( customOptions ) {
               y = _y === undefined ? this.y : _y,
               i = 0;
           for (; i<this.blocksLen; i += 2) {
-            drawBlock(x + blocks[i], y + blocks[i+1], this.color, _ctx);
+            drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, _ctx);
           }
         },
         getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
@@ -513,7 +584,7 @@ $.fn.blockrain = function( customOptions ) {
          */
         var ver = [0, -1, 0, -2, 0, -3, 0, -4],
         hor = [-1, -2, 0, -2, 1, -2, 2, -2];
-        return new Shape([ver, hor, ver, hor], getBlockColor('line'), true, 'line');
+        return new Shape([ver, hor, ver, hor], true, 'line');
       },
       square: function() {
         /*
@@ -521,7 +592,7 @@ $.fn.blockrain = function( customOptions ) {
          *  XX
          */
         var s = [0, 0, 1, 0, 0, -1, 1, -1];
-        return new Shape([s, s, s, s], getBlockColor('square'), true, 'square');
+        return new Shape([s, s, s, s], true, 'square');
       },
       arrow: function() {
         /*
@@ -534,7 +605,7 @@ $.fn.blockrain = function( customOptions ) {
           [1, -2, 1, -1, 1, 0, 2, -1],
           [0, -1, 1, -1, 2, -1, 1, 0],
           [0, -1, 1, -1, 1, -2, 1, 0]
-        ], getBlockColor('arrow'), false, 'arrow');
+        ], false, 'arrow');
       },
       rightHook: function() {
         /*
@@ -547,7 +618,7 @@ $.fn.blockrain = function( customOptions ) {
           [0, -2, 1, 0, 1, -1, 1, -2],
           [0, -1, 1, -1, 2, -1, 2, -2],
           [0, -2, 0, -1, 0, 0, 1, 0]
-        ], getBlockColor('rightHook'), false, 'rightHook');
+        ], false, 'rightHook');
       },
       leftHook: function() {
         /*
@@ -560,7 +631,7 @@ $.fn.blockrain = function( customOptions ) {
           [0, 0, 1, 0, 1, -1, 1, -2],
           [0, -2, 0, -1, 1, -1, 2, -1],
           [0, 0, 0, -1, 0, -2, 1, -2]
-        ], getBlockColor('leftHook'), false, 'leftHook');
+        ], false, 'leftHook');
       },
       leftZag: function() {
         /*
@@ -570,7 +641,7 @@ $.fn.blockrain = function( customOptions ) {
          */
         var ver = [0, 0, 0, -1, 1, -1, 1, -2],
             hor = [0, -1, 1, -1, 1, 0, 2, 0];
-        return new Shape([hor, ver, hor, ver], getBlockColor('leftZag'), true, 'leftZag');
+        return new Shape([hor, ver, hor, ver], true, 'leftZag');
       },
       rightZag: function() {
         /*
@@ -580,7 +651,7 @@ $.fn.blockrain = function( customOptions ) {
          */
         var ver = [0, -2, 0, -1, 1, -1, 1, 0],
             hor = [0, 0, 1, 0, 1, -1, 2, -1];
-        return new Shape([hor, ver, hor, ver], getBlockColor('rightZag'), true, 'rightZag');
+        return new Shape([hor, ver, hor, ver], true, 'rightZag');
       }
     };
 
@@ -595,9 +666,9 @@ $.fn.blockrain = function( customOptions ) {
         check: function(x, y) {
           return this.data[this.asIndex(x, y)];
         },
-        add: function(x, y, color) {
+        add: function(x, y, blockType) {
           if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-            this.data[this.asIndex(x, y)] = color;
+            this.data[this.asIndex(x, y)] = blockType;
           }
         },
         asIndex: function(x, y) {
@@ -659,8 +730,8 @@ $.fn.blockrain = function( customOptions ) {
           for (var i=0, len=this.data.length, row, color; i<len; i++) {
             if (this.data[i] !== undefined) {
               row = this.asY(i);
-              color = this.data[i];
-              drawBlock(this.asX(i), row, color);
+              blockType = this.data[i];
+              drawBlock(this.asX(i), row, blockType);
             }
           }
         }
@@ -783,7 +854,7 @@ $.fn.blockrain = function( customOptions ) {
               if (checkCollisions(x, y+1, blocks, true)) {
                 drop = false;
                 for (var i=0; i<cur.blocksLen; i+=2) {
-                  filled.add(x + blocks[i], y + blocks[i+1], getBlockColor(cur.blockType, false));
+                  filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
                   if (y + blocks[i] < 0) {
                     gameOver = true;
                   }
@@ -913,21 +984,15 @@ $.fn.blockrain = function( customOptions ) {
 $.fn.blockrain['themes'] = {
   'candy': {
     background: '#040304',
-    backgroundGrid: '#101010',
-    primary: null,
-    secondary: null,
-    stroke: null,
-    innerStroke: null,
-    innerSquare: '#000000',
-    innerShadow: '#000000',
+    backgroundGrid: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAMAAABhEH5lAAABcVBMVEUZGRkaGhobGxsAAAAcHBwBAQECAgIZGhwLCwsYGBgZGxYXFxcGBgYZGh8ZGh4aGhwZGxoWFhYeHh4bGRwdHR0HBwcaGxYFBQUDAwMeGRYZHBMEBAQcHB4VFRUXGh8aGhgbGxkgGBYdGRgcGhsUFBQQEBAbGRoWHRYbGhYdGBwdGRYaGR4UGyEaGRcMDAwREhcgICAAAgcbGx0aHBkSFBEZGxgYGR0JCQkbGR4SEhIABAAfHx8XFxUBBAATFAwZGhQZHBUeGBgICAgAAAgQEBgDAwAUFAobGxMXGxoQEBIdGRogGBUHAgAYEw0eGxQeGhcZHBEZGSEHAAUYDxAeGhkWGyEWGx4WHBoGBggXHBYEAAcWDRIcFhYcGBcZGRcTHR4THhoUHhYXGxwCAwgBAAITDw4ZGBYWGx8SHB4SHRkTHRUWGxUACgYCBwMAAQAREg0FBwQKDRIJDRYHDxIJDw8KDwgNDggQDA0QCw8MCgsNDQ3RXB2UAAABG0lEQVR4XjWMU4+tQRRE9+7uj8ax7bFt27Zt3PvrpyeZsx6qkpVKARUFKlIqcCivqEBBoMHRqCw3cmQ5KHINITHPHETCQezDnCwC1eMuqSvmYzmueojjwB8OMCUKIjRrhDFGfsN1ma8LaJ4Bqa9Q0dAP2zMxX38qlbQtqZXwL1eHsfFOW41E1GkjYUqARPFDS5PZNrwcUSXDkBAJAz/0tneoaiCAXnc5UykQxlcDg0OBQ0TPK4+kww1INB0mJqdKWDWr3mx4jivkan5hcSlrrJhSslTJFAhRdFhdS69njY3NreKObSEhWhB29/YPIFE7Oj4pnkoWQjwEZ+cXl/ZV7frm9k6yYkBCFO4fHp+eX17f3j8+v77//ZcF4Qfd6yVhNO1A+QAAAABJRU5ErkJggg==',
     blocks: {
-      line:     '#5BCBF3',
-      square:   '#F2AC3B',
-      arrow:    '#BA009D',
-      rightHook:'#ED8D33',
-      leftHook: '#4350D6',
-      rightZag: '#C33150',
-      leftZag:  '#6BCE2F'
+      line:     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACuklEQVR4Xi2MzW4cRRSFz/2p6p4eT2zjjE2MHBQWvAALNjwDS8SOFc/FIyCxQgh2LFHkBQgJyQo/wXKCEZ7x9E9VV93LBPNJ516dxXfo/U8+HTZ9uzrZympTjLo4DbtDiBpXSBGMocI5lkaMhKv0fz+LVX9P6ZuvvxqBby+3L3eJu6Zt27DL4qgIWW0KsxPC3Kjxz5fPT3z48csvtHSHd0C/1374RddPX/9xK6JdcjEutNfqFJMBsQat3By+i/7VxqJ6c/zd5avvn1+N7dl2V9Ad92M2ViI2ksyWSJ2QXQXc5/H25jYcHHKl1YYebcJqw/rW03OOzfr89NHbR8vH3Wq9Olofrddni+XhycXJhBSkKFLxWeHBZFFDVyD343Rzc/0XeYSXeXZIJaam2V9pLsBOtRIKYAorXqvAg8giaKsCKw1zJAGFbKhwtxrdG9E3BQxAIW1xyYUKUIwNxMAwDEwuSgA5iAw2l5ITOeE/GLRMihIOsnQZnKqOlWXRUWidyYkFpCxtCF1s8D+seBggYVYRhChkqqjmld3NKhhu1XKuKUf4g6egEitkvqc5ewo+3ZOVZJO4Q4OSEDGRRyAQkYH8QfMUCR07KS8DIsO8xhjcnUXnSv4GMRYShSUG2MFCeby/awOJFyvF3TU22ckk3E3FQjci+mJVggwz12rKVEvWOk3dwWpIr7ezrU4XZ+9ciBAxWCVlhDb2o5cZTgBR17R3w45hgg8/fu+Dj643adZVXzCmebsbp5T6fhr2L9W8z5xLNsyDpl2btrsXPynS9NvVVc28xzMLPDCUYbVUMy+TMgdinupCEapdvPv0lqGwjW9fHsXjF39eIzRpnFbLdiy918qCWmclnq3mcWhVnzw5v+83XYz0+LPP/8lL704NB3BBdbCDKlChAq8QgRvmGSFouyo3vz7Lr/8FMHqie3VCpNQAAAAASUVORK5CYII=',
+      square:   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACfUlEQVR4Xh3LvY5cRRBA4VNV3ffe+fEaZARgWfBExEhEZEg8A69AgkC8AzEiICMgJCdAxggsGRuW3Z3dmenbXVWskT6d7MiXnz3qclu87esm1qW3NteRuqaCIAmQABwPvPU2NyeaUa6P159/9QV3l/HqlWqN41El0PaadEJAoZBKqS9+eybL/tvvvi8PrHA4ku33pz9v5rafKmc0I7QhbiGaJSikyeCh1T7OG6fMluOvP/5+8csb+/RxhUtlEXA5KUMpiEpWwZKU3D799Zl1CtpEjsoh++HRxUMBVhgry4yUXLvstnE8qWi/HZndTEwpppj5XLIg7fZ4+fJlb91jzSlGhjc2O7RMj995nApRIRW0BHRl9UXLona6PYiGGKpaa50qPtQ96/5BCgkpBKghpI7VJZK5bmYju5IxQkZONqtbu+txd5ZEQFI0KaRRJxEZY0wjh/dqKqbZ/z9tqmJIqpQSnaD8T9sYkGqWmuTIZHgoWYupKh4SqSQimqrJfeV1gTECF4NKmUHwDFRqNSuJjMTxFQANNKGUyTBxYqSX6J6USdc1BquYFhEMFEQCUvSeC5rheL/Y74kAvX/OPXRZojIkqHkaLpMwWdYJm1fHlZIJotdXN7tFtczvvfuB5MIyRZwQ11pora2BTKOvva3zPKtStpsKLNNmmcr53xtFMtLaGLSR61IKKaPHenO1L2+qThqrn5FvPuGjjz8s4x+NI6Ptdvtxckywo0cjstZZZfZhNhSWNuoPP/5Udhebc8+tbp4//zPd6dcaGtJtWtUiVkhTWSJkTn3y5P15M19ervL1p9UZFzX9zHYmO1Ph3KFQK+rkIBMScbY7DicOzn+QRoW5iamqhgAAAABJRU5ErkJggg==',
+      arrow:    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACsklEQVR4XhWPu25bVxREZz/OuQ9RVKhXjBSu8gX5h+QD0udD8ilByjRpUqZxa6RxY8DuYlhwHhAc2qRIieK9vOfsvUMNBoPVrGLoh6+++7y7mbFfTNIVdShCxCGuAgE8tSilhOVWU6lrtPjPK33ffvvb6xd4KG9/+f1kenIYoAgOIc+AF9u5Rdteuvubty9LU168fqW9z7AFanr36uPZSOIgWHB1IJABKE0keSr3QdLolXitjw1n717++sfPP/7Ula6pfbYmeU7eaBybnzg6ewwpT8DW/vth2acFkzf9Pi0OOU1+/eVlM2/m14vZ+Rfz88t+Np+fnZ8tns1OL66vLss0FIughgppDumLzIpmYBrHz+uVsZVSsraorJoMQU5dOs3K3jaiSXGciNYoG3cQcbJjwiKC3Ny9ljhEEUlGBnh4IJwR+qQ6q7FbuMPBLEQCVjaYA0mYwcyIY6p5qYFQQqOexRMhHOqg6sV8mtiqQki51gSHV6YAMYMMxgIC2IOcBcIsQipBBCIjNqEQBWARjjAOHAtSh1eqk9bqLpBKQUSZE4ccIqpJFnWQiRSKypjUA1DgEDw5janNkgA4zKmGQtpgsNqhMoRCmRni4AgKJh6DB842TffENWWqU+m448eYje186GZT31nXo5EqPhUGIqoGwd1gtWFtRBeLxcXF1TydYh+td1E5lMdpOOxGr9bPOzdrtFGWk2lAg84e9/fYbGmsync0xD7mfkITgUMbJaKc26GOVn2sB61Gf958OE992wsoQjSSjBHUwEmlISTsxjEsOIsxP3v+/M3tey3wrRVh29wuA2Vo3Xoe3KP6Endhzh3v92NjKefcXZzETKxR+Sa+vt2s3/3z127YrYfN+mGz2m4+rT+tNuu77d3yfvn3+vbh8eH4bb3dLrer97c3q7L6H15gvODKB5u4AAAAAElFTkSuQmCC',
+      rightHook:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACqElEQVR4Xh3PO2tlZRSH8f9a73XvPTkTExl1dLAIKFpNY2Fl4UcT7G3FwmIaO3sbEfQjWAxDAkIORDHJyXFf3stayzC/9qke+ubrF0u7zqwfsJNFXEKtCAJriBGBoB0gNAZ5WIekcC0f+br8++3Pr1AP5Y/f6Xgfx4RqoB2kI27QgkYQw5BA2L95M+vTn379y0c2HI+Y5Ob6z3B/M/ZmlTieV7ISj9rXZ2n338NciEMedGshJacbZ9X16vK3H76vh/1paCOWiWvos5M1U9llLIebKeqz0zG4PmZ/dfl6XWc/9p4Ox/fMwnIcXrwL6ohPg54OZhYTUUc+w1YQ83z3kMadEKdp8EmE54cnKifTBLOr17cqtwIf4gAuKhUd8Lh4+TKPowjyOK1l8cxAm9nK2nWnsQeAyNtgldnClCLntkrRrTBcFyPjYRg8AEAY4JDhkhp7uOBIRbyqrmK+KcBm1qU30UbSxHcGnIGpKYk63dQxnC2sPcWo2slZUCCGYXPkkBnUqjcCSAGFsaOUQk5koqUqPFV5G2sDai+tG3vv6ZF3BojBzFrvpeij4KtDZTjPXTWGBA91uWJTo1WkqTAZoAbpT3ejd0YOBW1zoAHE/tG8FThm52KOLnDv1dA8DACTwbRU6TxSaX1WZII/1qBgwLvWtgN6ieQc2hC9hwLGTFS35eTJ7uOL5xxTkZI44l7BDGpwBke8FFCA9Pj2EAipHbd8Qre3fxOMDWykGryyM2Vv67JwmCJ7cQRRM6JXX+CrLz97/uHJ4bgHFUdKBi8B5gECLLAys4grAkr5Vt758ZdLTwhuPNvfHP7ZPzjrBAHYLBlChwPQ+jrtpq2UJv3i0/clni/Y03efYzxPvZdBkAzeAKATukENAoTA86ynZ3GrVQl3Eu/yJ/8D33mmeKR3Cz8AAAAASUVORK5CYII=',
+      leftHook: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACq0lEQVR4Xg3HO24mVRBH8X/Vrfv4ut02BjS8GSBAQuyCmE0gwSLICFgCBLASAhLiiQjQICFBMAMSFn63v+77qCp89EsO5U+/rus/0zQPPW8thXRQABLAjtHAAZ2gzGk2HRCG1YMPwgdf/fnXj1fX+O7732s/A0kzbwEUCW5Fgh8HGVdFTOn5H79NiZ/98rPATBVS8OzX5xTehYsxd3KFwXcGEljVOGVJ8a7W4Q4YT8sb33z70xdf/oB8HufzhjI0m2a3JLykuAyV4RGxrLVN5+f/3dxSKXJc59qfUk77djhdXhGx0/mMAg/rpm30bXq97Fp3su1mrMe19e46BLLw9Nb1w0WaZoO+fPmCNbTW3D1Fcjci77Cnn3wMhCBpWU7vuwqo3evgaar6QHRqfRXKhQiELFG1O6H3MZUyLpTIx24UMkNASbqZwZiN3AQsgKhZ6/VYR9OcDw/blg5xmKqPnIRBLQUZw4iIWQKydRcEcvLOOZ2A80Nv8SRv1iiHQWPXewbztm3MbObMYgpGCMwiwgwAIhJCAGBmjMD+KDJJThJzTI8TKZm5E9S7U3c0s6PrkVujvYbm0Qr1iceJ+GZ9772OMawNDNAgVm8cADcAQSgzCSiChZj8MRLwXCTPufQEC8SlVKPWNTJJ4BTDcds58tCaMsVoIQ8Nq2AgS97uVg2h7v29Dz86W86MGqB922F+djjsdbWE0eu233fbwF0opd57KYU43l5ewQ43N7d17CwUHJnlsl4QmUwkJJKZ5uXaLdBrnzl6EGbTbV2nVIiMuMU44EMwMjn76GMHeWAKhKuLvyXoC+F3IvXrfy9zmO/WKyUM6c1riWUY7btKiA+9UkyvPnk7KFMPtLz/uS9vrjVFLNqTUSEJNLN5hQL7gIXpsGytO0ekCduR/fg/hV+olVqSm3YAAAAASUVORK5CYII=',
+      rightZag: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACt0lEQVR4Xg3LOW6eVRQG4PcM937DP9hYlkgUQ6RQsAiEWAC7YCWUtGyAFqhpEHRI0CCBIjpHJBSxEhzkxP6H+93pHPz0D3358IsbuyY/XlCs7/YU5zjFZgdGp07BEDq4KXwA0PvuqIfDGbT0u69/+hZvr/DrH1gc1WENwUAGM3RDcXQGRbA9/e3nJPX3F5dqdY/ja8ztx++/+YhX5S6P47REODW2Pra+qsbOR5VFWwjHVPKJJF1FevPn019++O7jeYo3h5VG8Ua5OLnCh25T7+RwYfZavVz993q5OehccfImnV3nqdLjD54gTiDAF3cnEJrBAbZNSS//vTKP1FcTk0ppsfYzkpEt58Pls8vb29vTabDWYZJzjsqnJ+vHjx9tVvf3qG3QVpXJ0Y5L2xWmYbPt7W5WeK7RKUqICic7poQY6q4Fw2AUDSykUGUlQ0cUy3XUqCxm8Obe4SypVoRwOC7kLE5szIoBHsmlO6NJO3Qv5GEozI3IiE25K2EeLAiYADiBOwi51NLdCRrGcQ5xTLVUcg1BVeFszXtaWinkIAcALigQDwISby0Vq3dpR8IA2r1cKNfZRTq9F2c1iLuYqQcHg2Dmvbam08QUG1V07zASqDCLouSSE0tojCbGablFoMgkpMxht9QukvICASIXtNLy7rDDakVDeGepzpIUup1mlIZs5Dbo9OknnwEELGgZJgBhHHDYIx/v8/r98+d/P2cVVSOkitRPN9uXfz0j2rRSh1CZDKRmFomgnns62Wyvrq+ncTy2JJ/rRXv76vx04ymr83pci9gYRYISS4N3cgRKvYb15EHOHzy8fPaPgtMe8zHG5y8uH6y3wa7LPbNOIIkQRpCOZt7KzatHFx+Ww0Ki9NX8ZHWy7Sltchtz2aj32nicjZkpLr1m760vp5tN2e8jtHX0Yf4f3da+1L4oEEQAAAAASUVORK5CYII=',
+      leftZag:  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAIAAADZrBkAAAACtElEQVR4Xg2Lu25cZRhF93f5L3OOPeOQmJuDhEIHDa/CC/B4SHSICqS0CERDE2MJAYKEmITEcewZz/nvH7O0taq16eTL++P66nhCDegOAEhghFYhDDM0hSgowQkKkDIwJi0pP/72G9j24vIi8S7nN34lYG1VyOKg0uVKFFIiY/XL+R8s977+6nvttBMkovTDz9/Np3G3fTlvYkoFJswzaxtya2haQ0nUdGa2PLY6GD/9+vjJ+Y+bD+K2vFxtrLS3cQq9t1rLwUZ7IpuOAmQQ8u9/PgFDWbG5708/jK/Ti9OzExErhYVU1TMrCZqV7fY2Or2+uQ5H7zgPMNQF5HL7+upZeFeHLU//etrraM2YedQBAXsnoPXHn8yrcHVzE0LICWoECTQf+SG19dRqK3tMUxSRZtkIZtqbsblW+vF8/Pzy1XoNvdthjDas7He7swdno+JkM21v997r6A1MIKNBwiCiXssqhNsbcAwQosPTeek1MzBa947NmnewYcGR8Oh1sZG8s5LvQoACaK0Yegi+965MNWXnxIAx0AdyWnqDMjuh1KoIkYGNUPqh0zHaYcpwoin1ZiBFjFBVEWLm1ppzTkQAsAQYQdwhTap+dBCRXzkW6g2lIpdqRkYE1v1+AZgEuiRo8G2YaCBo75ZylSCdiMnoYPVefO1k8AYm7rlAjUDi7/ZN18HIffbp5zFO22Vf0bzXfsBQUu4DIJ6P1/t/XowB9RGl4Xj94M62zy+vou2sDUySyhJjTDXpAeL9YFKXaxYnuoL2BRfnzxghj7YKm4liHkszGkOUjtxIYjKM9ncpTnPr4+HDj8j+U5/B5R5k/vfv344m6rfXHb3NSqKvdrs5xKUWeN95nUd69Oi9vpQI0PtfTAn7eE/eLF0Y92eUjrcDISBmrBjbgkrIDPFYCfoCLPgflXOjuIEFgMYAAAAASUVORK5CYII='
     }
   },
   'modern': {

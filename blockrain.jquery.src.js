@@ -69,6 +69,44 @@ $.fn.blockrain = function( customOptions ) {
       options.theme = $.fn.blockrain.themes['retro'];
     }
 
+
+    /**
+     * Find base64 encoded images and load them as image objects, which can be used by the canvas renderer
+     */
+    var preloadThemeAssets = function() {
+      if( typeof options.theme.blocks !== 'undefined' ){
+        var keys = Object.keys(options.theme.blocks);
+        var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
+
+        // Load the blocks
+        for( var i = 0; i < keys.length; i++ ) {
+          options.theme.blocks[ keys[i] ]
+          if( typeof options.theme.blocks[ keys[i] ] === 'string' ) {
+            if( base64check.test( options.theme.blocks[ keys[i] ] ) ) {
+              var base64src = options.theme.blocks[ keys[i] ];
+              options.theme.blocks[ keys[i] ] = new Image();
+              options.theme.blocks[ keys[i] ].src = base64src;
+            }
+          }
+        }
+      }
+
+      // Load the bg
+      if( typeof options.theme.backgroundGrid !== 'undefined' ){
+        if( typeof options.theme.backgroundGrid === 'string' ) {
+          if( base64check.test( options.theme.backgroundGrid ) ) {
+            var base64src = options.theme.backgroundGrid;
+            options.theme.backgroundGrid = new Image();
+            options.theme.backgroundGrid.src = base64src;
+          }
+        }
+      }
+
+    };
+
+    // Load the image assets
+    preloadThemeAssets();
+
     if( isNaN(parseInt(options.theme.strokeWidth)) || typeof parseInt(options.theme.strokeWidth) !== 'number' ) {
       options.theme.strokeWidth = 2;
     }
@@ -307,25 +345,43 @@ $.fn.blockrain = function( customOptions ) {
         return;
       }
 
+      if( options.theme.backgroundGrid instanceof Image ) {
 
-      if( typeof options.theme.backgroundGrid !== 'string' ) {
-        return;
-      }
+        // Not loaded
+        if( options.theme.backgroundGrid.width === 0 || options.theme.backgroundGrid.height === 0 ){ return; }
 
-      var borderWidth = options.theme.strokeWidth;
-      var borderDistance = Math.round(block_size*0.23);
-      var squareDistance = Math.round(block_size*0.30);
+        _ctx.globalAlpha = 1.0;
 
-      _ctx.globalAlpha = 1.0;
-      _ctx.fillStyle = options.theme.backgroundGrid;
+        for( var x=0; x<WIDTH; x++ ) {
+          for( var y=0; y<HEIGHT; y++ ) {
+            var cx = x * block_size;
+            var cy = y * block_size;
 
-      for( var x=0; x<WIDTH; x++ ) {
-        for( var y=0; y<HEIGHT; y++ ) {
-          var cx = x * block_size;
-          var cy = y * block_size;
-
-          _ctx.fillRect(cx+borderWidth, cy+borderWidth, block_size-borderWidth*2, block_size-borderWidth*2);
+            _ctx.drawImage( options.theme.backgroundGrid, 
+                            0, 0, options.theme.backgroundGrid.width, options.theme.backgroundGrid.height, 
+                            cx, cy, block_size, block_size);
+          }
         }
+
+      }
+      else if( typeof options.theme.backgroundGrid === 'string' ) {
+
+        var borderWidth = options.theme.strokeWidth;
+        var borderDistance = Math.round(block_size*0.23);
+        var squareDistance = Math.round(block_size*0.30);
+
+        _ctx.globalAlpha = 1.0;
+        _ctx.fillStyle = options.theme.backgroundGrid;
+
+        for( var x=0; x<WIDTH; x++ ) {
+          for( var y=0; y<HEIGHT; y++ ) {
+            var cx = x * block_size;
+            var cy = y * block_size;
+
+            _ctx.fillRect(cx+borderWidth, cy+borderWidth, block_size-borderWidth*2, block_size-borderWidth*2);
+          }
+        }
+
       }
 
       _ctx.globalAlpha = 1.0;
@@ -334,7 +390,7 @@ $.fn.blockrain = function( customOptions ) {
     /**
      * Draws one block (Each piece is made of 4 blocks)
      */
-    function drawBlock(x, y, color, _ctx) {
+    function drawBlock(x, y, blockType, _ctx) {
       // convert x and y to pixel
       _ctx = _ctx || ctx;
       x = x * block_size;
@@ -343,44 +399,60 @@ $.fn.blockrain = function( customOptions ) {
       var borderWidth = options.theme.strokeWidth;
       var borderDistance = Math.round(block_size*0.23);
       var squareDistance = Math.round(block_size*0.30);
+      
+      var color = getBlockColor(blockType, false);
 
       // Draw the main square
       _ctx.globalAlpha = 1.0;
-      _ctx.fillStyle = color;
-      _ctx.fillRect(x, y, block_size, block_size);
 
-      // Inner Shadow
-      if( typeof options.theme.innerShadow === 'string' ) {
+      // If it's an image, the block has a specific texture. Use that.
+      if( color instanceof Image ) {
         _ctx.globalAlpha = 1.0;
-        _ctx.strokeStyle = options.theme.innerShadow;
-        _ctx.lineWidth = 1.0;
 
-        // Draw the borders
-        _ctx.strokeRect(x+1, y+1, block_size-2, block_size-2);
-      }
+        // Not loaded
+        if( color.width === 0 || color.height === 0 ){ return; }
 
-      // Decoration (borders)
-      if( typeof options.theme.stroke === 'string' ) {
-        _ctx.globalAlpha = 1.0;
-        _ctx.fillStyle = options.theme.stroke;
-        _ctx.strokeStyle = options.theme.stroke;
-        _ctx.lineWidth = borderWidth;
+        _ctx.drawImage(color, 0, 0, color.width, color.height, x, y, block_size, block_size);
 
-        // Draw the borders
-        _ctx.strokeRect(x, y, block_size, block_size);
       }
-      if( typeof options.theme.innerStroke === 'string' ) {
-        // Draw the inner dashes
-        _ctx.fillStyle = options.theme.innerStroke;
-        _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
-        // The rects shouldn't overlap, to prevent issues with transparency
-        _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
-      }
-      if( typeof options.theme.innerSquare === 'string' ) {
-        // Draw the inner square
-        _ctx.fillStyle = options.theme.innerSquare;
-        _ctx.globalAlpha = 0.2;
-        _ctx.fillRect(x+squareDistance, y+squareDistance, block_size-squareDistance*2, block_size-squareDistance*2);
+      else if( typeof color === 'string' )
+      {
+        _ctx.fillStyle = color;
+        _ctx.fillRect(x, y, block_size, block_size);
+
+        // Inner Shadow
+        if( typeof options.theme.innerShadow === 'string' ) {
+          _ctx.globalAlpha = 1.0;
+          _ctx.strokeStyle = options.theme.innerShadow;
+          _ctx.lineWidth = 1.0;
+
+          // Draw the borders
+          _ctx.strokeRect(x+1, y+1, block_size-2, block_size-2);
+        }
+
+        // Decoration (borders)
+        if( typeof options.theme.stroke === 'string' ) {
+          _ctx.globalAlpha = 1.0;
+          _ctx.fillStyle = options.theme.stroke;
+          _ctx.strokeStyle = options.theme.stroke;
+          _ctx.lineWidth = borderWidth;
+
+          // Draw the borders
+          _ctx.strokeRect(x, y, block_size, block_size);
+        }
+        if( typeof options.theme.innerStroke === 'string' ) {
+          // Draw the inner dashes
+          _ctx.fillStyle = options.theme.innerStroke;
+          _ctx.fillRect(x+borderDistance, y+borderDistance, block_size-borderDistance*2, borderWidth);
+          // The rects shouldn't overlap, to prevent issues with transparency
+          _ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, block_size-borderDistance*2-borderWidth);
+        }
+        if( typeof options.theme.innerSquare === 'string' ) {
+          // Draw the inner square
+          _ctx.fillStyle = options.theme.innerSquare;
+          _ctx.globalAlpha = 0.2;
+          _ctx.fillRect(x+squareDistance, y+squareDistance, block_size-squareDistance*2, block_size-squareDistance*2);
+        }
       }
 
       // Return the alpha back to 1.0 so we don't create any issues with other drawings.
@@ -415,7 +487,7 @@ $.fn.blockrain = function( customOptions ) {
     };
 
 
-    function Shape(orientations, color, symmetrical, blockType) {
+    function Shape(orientations, symmetrical, blockType) {
 
       $.extend(this, {
         x: 0,
@@ -430,7 +502,6 @@ $.fn.blockrain = function( customOptions ) {
           return this;
         },
         blockType: blockType,
-        color: color,
         blocksLen: orientations[0].length,
         orientations: orientations,
         orientation: 0, // 4 possible
@@ -463,7 +534,7 @@ $.fn.blockrain = function( customOptions ) {
               y = _y === undefined ? this.y : _y,
               i = 0;
           for (; i<this.blocksLen; i += 2) {
-            drawBlock(x + blocks[i], y + blocks[i+1], this.color, _ctx);
+            drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, _ctx);
           }
         },
         getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
@@ -503,7 +574,7 @@ $.fn.blockrain = function( customOptions ) {
          */
         var ver = [0, -1, 0, -2, 0, -3, 0, -4],
         hor = [-1, -2, 0, -2, 1, -2, 2, -2];
-        return new Shape([ver, hor, ver, hor], getBlockColor('line'), true, 'line');
+        return new Shape([ver, hor, ver, hor], true, 'line');
       },
       square: function() {
         /*
@@ -511,7 +582,7 @@ $.fn.blockrain = function( customOptions ) {
          *  XX
          */
         var s = [0, 0, 1, 0, 0, -1, 1, -1];
-        return new Shape([s, s, s, s], getBlockColor('square'), true, 'square');
+        return new Shape([s, s, s, s], true, 'square');
       },
       arrow: function() {
         /*
@@ -524,7 +595,7 @@ $.fn.blockrain = function( customOptions ) {
           [1, -2, 1, -1, 1, 0, 2, -1],
           [0, -1, 1, -1, 2, -1, 1, 0],
           [0, -1, 1, -1, 1, -2, 1, 0]
-        ], getBlockColor('arrow'), false, 'arrow');
+        ], false, 'arrow');
       },
       rightHook: function() {
         /*
@@ -537,7 +608,7 @@ $.fn.blockrain = function( customOptions ) {
           [0, -2, 1, 0, 1, -1, 1, -2],
           [0, -1, 1, -1, 2, -1, 2, -2],
           [0, -2, 0, -1, 0, 0, 1, 0]
-        ], getBlockColor('rightHook'), false, 'rightHook');
+        ], false, 'rightHook');
       },
       leftHook: function() {
         /*
@@ -550,7 +621,7 @@ $.fn.blockrain = function( customOptions ) {
           [0, 0, 1, 0, 1, -1, 1, -2],
           [0, -2, 0, -1, 1, -1, 2, -1],
           [0, 0, 0, -1, 0, -2, 1, -2]
-        ], getBlockColor('leftHook'), false, 'leftHook');
+        ], false, 'leftHook');
       },
       leftZag: function() {
         /*
@@ -560,7 +631,7 @@ $.fn.blockrain = function( customOptions ) {
          */
         var ver = [0, 0, 0, -1, 1, -1, 1, -2],
             hor = [0, -1, 1, -1, 1, 0, 2, 0];
-        return new Shape([hor, ver, hor, ver], getBlockColor('leftZag'), true, 'leftZag');
+        return new Shape([hor, ver, hor, ver], true, 'leftZag');
       },
       rightZag: function() {
         /*
@@ -570,7 +641,7 @@ $.fn.blockrain = function( customOptions ) {
          */
         var ver = [0, -2, 0, -1, 1, -1, 1, 0],
             hor = [0, 0, 1, 0, 1, -1, 2, -1];
-        return new Shape([hor, ver, hor, ver], getBlockColor('rightZag'), true, 'rightZag');
+        return new Shape([hor, ver, hor, ver], true, 'rightZag');
       }
     };
 
@@ -585,9 +656,9 @@ $.fn.blockrain = function( customOptions ) {
         check: function(x, y) {
           return this.data[this.asIndex(x, y)];
         },
-        add: function(x, y, color) {
+        add: function(x, y, blockType) {
           if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-            this.data[this.asIndex(x, y)] = color;
+            this.data[this.asIndex(x, y)] = blockType;
           }
         },
         asIndex: function(x, y) {
@@ -649,8 +720,8 @@ $.fn.blockrain = function( customOptions ) {
           for (var i=0, len=this.data.length, row, color; i<len; i++) {
             if (this.data[i] !== undefined) {
               row = this.asY(i);
-              color = this.data[i];
-              drawBlock(this.asX(i), row, color);
+              blockType = this.data[i];
+              drawBlock(this.asX(i), row, blockType);
             }
           }
         }
@@ -773,7 +844,7 @@ $.fn.blockrain = function( customOptions ) {
               if (checkCollisions(x, y+1, blocks, true)) {
                 drop = false;
                 for (var i=0; i<cur.blocksLen; i+=2) {
-                  filled.add(x + blocks[i], y + blocks[i+1], getBlockColor(cur.blockType, false));
+                  filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
                   if (y + blocks[i] < 0) {
                     gameOver = true;
                   }
