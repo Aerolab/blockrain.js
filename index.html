@@ -5,6 +5,7 @@
   <title>Blockrain.js - A tetris game in HTML5 + Javascript (with autoplay!)</title>
   <link href='http://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="blockrain.css">
 
 </head>
 <body>
@@ -98,20 +99,12 @@
 
   <h1>Play</h1>
 
-  <div class="game" id="tetris-hipster">
+  <div class="game" id="tetris-play">
 
   </div>
 
 </section>
 
-
-<section class="hipster">
-
-  <h1>Use a background</h1>
-
-  <div class="game" id="tetris-hipster">
-  </div>
-</section>
 
 <footer id="footer">
   <p>If you like it, don't forget to fork/star it on Github.</p>
@@ -154,15 +147,12 @@
     }
   });
 
-  $('#tetris-hipster').blockrain({
-    autoplay: true,
-    speed: 10,
+  $('#tetris-play').blockrain({
+    autoplay: false,
+    speed: 20,
     autoBlockWidth: true,
     autoBlockSize: 30,
-    theme: {
-      primary: '#000000',
-      secondary: '#000000'
-    }
+    theme: 'candy'
   });
 </script>
 
