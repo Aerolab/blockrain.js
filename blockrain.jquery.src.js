@@ -82,9 +82,11 @@ $.fn.blockrain = function( customOptions ) {
      * Find base64 encoded images and load them as image objects, which can be used by the canvas renderer
      */
     var preloadThemeAssets = function() {
+      
+      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
+
       if( typeof options.theme.blocks !== 'undefined' ){
         var keys = Object.keys(options.theme.blocks);
-        var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
 
         // Load the blocks
         for( var i = 0; i < keys.length; i++ ) {
