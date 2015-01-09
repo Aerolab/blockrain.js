@@ -1,5 +1,30 @@
 #examples {
   padding-top: 0px;
+  .buttons {
+    .btn {
+      display: block;
+      width: 35px;
+      height: 63px;
+      padding: 0;
+      position: absolute;
+      background: url(../images/slider-nav.png) no-repeat;
+      background-size: auto 100%;
+      border: none;
+      top: 50%;
+      margin-top: -30px;
+      overflow: hidden;
+      text-indent: -9999px;
+    }
+    .btn-prev {
+      right: 100%;
+      margin-right: 70px;
+    }
+    .btn-next {
+      left: 100%;
+      margin-left: 70px;
+      background-position: right;
+    }
+  }
 }
 #example-slider {
   background: #000;
@@ -20,7 +45,7 @@
   }
 }
 
-#example-vim {
+.example {
   padding: 50px 0 0 0;
   color: #c2ffad;
   position: relative;
