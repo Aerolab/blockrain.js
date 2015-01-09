@@ -13,12 +13,12 @@
 <section id="hero">
 
   <div class="welcome">
-    <h1>BlockRain.js</h1>
-    <p>Play the classic game on your site. Simple as that.</p>
+    <h1><img src="assets/images/logo.svg" width="560" alt=""></h1>
+    <p>Embed & play the classic game on your site. Simple as that.</p>
 
     <div class="buttons">
       <a href="blockrain.min.js" download class="btn btn-download">Download</a>
-      <a href="https://github.com/Aerolab/blockrain.js" class="btn btn-github">Fork</a>
+      <a href="https://github.com/Aerolab/blockrain.js" class="btn btn-github">Fork on Github</a>
     </div>
   </div>
 
@@ -87,11 +87,21 @@
     <h1>Examples for you to play with</h1>
   </header>
   <article id="example-slider">
-    <div class="example" id="example-versus">
+    <div class="example" id="example-vim">
+      <div class="theme">theme: <strong>"vim"</strong></div>
+      <div class="instructions">
+        Use only arrows
+        <div class="keyboard">
+          <div class="key key-up"></div>
+          <div class="key key-left"></div>
+          <div class="key key-down"></div>
+          <div class="key key-right"></div>
+        </div>
+      </div>
       <div class="game" id="tetris-versus-1"></div>
-      <div class="game" id="tetris-versus-2"></div>
     </div>
   </article>
+
 </section>
 
 
@@ -112,8 +122,9 @@
     <a href="blockrain.min.js" download class="btn btn-download">Download</a>
     <a href="https://github.com/Aerolab/blockrain.js" class="btn btn-github">Fork</a>
   </div>
-  <p>Made with love by <a href="#">aerolab</a></p>
+  <p>Made with love by <a href="#">aerolab</a>, based on <a href="">Carlitos</a> magic</p>
   <p>We actually have it live on our site. <a href="#">Check it out!</a></p>
+  <p><a href=""><img src="assets/images/kite.png" width="39" alt="Aerolab"></a></p>
 </footer>
 
 
@@ -124,20 +135,17 @@
 <script>
   $('#cover-tetris').blockrain({
     autoplay: true,
-    speed: 1000,
+    speed: 100,
     autoBlockWidth: true,
     autoBlockSize: 25,
-    theme: 'candy'
+    theme: 'retro'
+  });
+
+  $('#tetris-versus-1').blockrain({
+    speed: 50,
+    theme: 'vim'
   });
 /*
-  $('#tetris-versus-1').blockrain({
-    autoplay: true,
-    speed: 100,
-    theme: 'gameboy',
-    onGameOver: function(){
-
-    }
-  });
   $('#tetris-versus-2').blockrain({
     autoplay: true,
     speed: 100,

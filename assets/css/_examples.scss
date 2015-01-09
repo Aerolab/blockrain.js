@@ -20,12 +20,100 @@
   }
 }
 
-#example-versus {
-  padding: 40px 0;
+#example-vim {
+  padding: 50px 0 0 0;
+  color: #c2ffad;
+  position: relative;
   .game {
     display: inline-block;
     margin: 0px 20px;
     width: 200px;
-    height: 350px;
+    height: 330px;
+    position: static;
+    .blockrain-score-holder {
+      left: 100%;
+      top: -10px;
+      right: auto;
+      text-align: left;
+      margin-left: 40px;
+      font-size: 14px;
+      color: #c2ffad;
+      line-height: 20px;
+
+      .blockrain-score-num {
+        font-size: 24px;
+        font-weight: normal;
+      }
+    }
+    .blockrain-start, .blockrain-game-over {
+      top: auto;
+      transform: none;
+      height: 100%;
+    }
+    .blockrain-start-msg, .blockrain-game-over-msg {
+      color: #c2ffad;
+      font-size: 14px;
+      position: absolute;
+      top: -16px;
+      width: 100%;
+    }
+    .blockrain-game-over-msg {
+      top: 50%;
+      font-size: 24px;
+      margin-top: -24px;
+    }
+    .blockrain-start-btn, .blockrain-game-over-btn {
+      position: absolute;
+      left: 100%;
+      bottom: 3px;
+      border: none;
+      background: #c2ffad;
+      color: #000;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-left: 40px;
+      width: 120px;
+      padding: 13px 0;
+      font-size: 16px;
+      &:before, &:after { display: none; }
+    }
+  }
+  .theme {
+    position: absolute;
+    top: 36px;
+    left: 20px;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
+    strong {
+      display: block;
+      font-size: 24px;
+      font-weight: normal;
+    }
+  }
+  .instructions {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    overflow: hidden;
+    font-size: 14px;
+
+    .key {
+      border: 1px solid #c2ffad;
+      display: block;
+      width: 38px;
+      height: 38px;
+      float: left;
+      &.key-up {
+        float: none;
+        margin-left: 39px;
+        border-bottom: none;
+        margin-top: 20px;
+      }
+      &.key-down {
+        border-left: none;
+        border-right: none;
+      }
+    }
   }
 }

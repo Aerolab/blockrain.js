@@ -18,6 +18,11 @@
     margin: 0;
   }
 
+  p {
+    font-size: 1.5em;
+    margin-bottom: 50px;
+  }
+
   &:after {
     content: "";
     display: block;
@@ -27,6 +32,23 @@
     position: absolute;
     bottom: -12px;
     left: 0;
+  }
+  .blockrain-score {
+    border: 2px solid #fff;
+    text-align: center;
+    width: 120px;
+    background: #232323;
+
+    .blockrain-score-msg {
+      border-bottom: 2px solid #fff;
+      text-transform: uppercase;
+      padding: 4px 0;
+      font-size: .7em;
+    }
+    .blockrain-score-num {
+      font-size: 1.2em;
+      padding: 3px 0 5px;
+    }
   }
 }
 

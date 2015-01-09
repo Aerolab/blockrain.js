@@ -2,6 +2,7 @@
   position: relative;
   z-index: 1;
   text-align: center;
+  padding-bottom: 60px;
 
   .buttons {
     padding: 20px 0;
@@ -11,6 +12,9 @@
     font-size: .85em;
     a {
       color: #ff7b00;
+    }
+    img {
+      padding: 15px 0;
     }
   }
 }
