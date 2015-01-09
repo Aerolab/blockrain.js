@@ -13,7 +13,7 @@ var getCopyright = function () {
 };
 
 gulp.task('build', function () {
-    gulp.src(['./blockrain.jquery.libs.js', './blockrain.jquery.src.js', './blockrain.jquery.themes.js'])
+    gulp.src(['./blockrain.jquery.src.js', './blockrain.jquery.themes.js'])
     .pipe(header(getCopyright(), {version: getVersion()}))
     .pipe(concat('blockrain.jquery.js'))
     .pipe(gulp.dest('./'))
