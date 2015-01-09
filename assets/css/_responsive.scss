@@ -1,0 +1,108 @@
+@media (max-width: 840px) {
+  section {
+    article {
+      max-width: 560px;
+    }
+  }
+}
+
+@media (max-width: 780px) {
+  #example-slider {
+    width: 400px;
+  }
+  .example {
+    height: 340px;
+    .game {
+      float: right;
+    }
+  }
+  .example .game .blockrain-start-btn, 
+  .example .game .blockrain-game-over-btn {
+    left: 50%;
+    bottom: auto;
+    top: 50%;
+    margin-left: -60px;
+    margin-top: -20px;
+  }
+  .example .game .blockrain-start-msg,
+  .example .game .blockrain-game-over-msg {
+    top: 50%;
+    margin-top: -75px;
+  }
+}
+
+@media (max-width: 640px) {
+  section header h1 {
+    &:before, &:after { display: none; }
+  }
+  #example-slider {
+    width: 240px;
+    height: 460px;
+  }
+  .example {
+    padding-top: 100px;
+  }
+  .example .game { float: none; }
+  .example .instructions {
+    display: none;
+  }
+  .example .game .blockrain-score-holder {
+    left: auto;
+    right: 0;
+    margin-left: 0;
+    width: 100%;
+    top: -60px;
+    z-index: 1;
+    text-align: right;
+  }
+}
+
+@media (max-width: 560px) {
+  section {
+    article {
+      max-width: 280px;
+    }
+  }
+  #example-slider {
+    .buttons {
+      position: relative;
+      width: 60%;
+      margin: 0 auto;
+      padding-top: 40px;
+      overflow: hidden;
+      .btn {
+        top: 0;
+        margin: 0;
+        position: relative;
+        left: auto;
+        right: auto;
+        height: 50px;
+        width: 28px;
+        &.btn-prev { float: left; }
+        &.btn-next { float: right; }
+      }
+    }
+  }
+}
+@media (max-width: 400px) {
+  #hero .welcome {
+    margin-bottom: 0;
+    padding: 0 20px;
+  }
+  #hero .blockrain-score-holder {
+    display: none !important;
+  }
+  #footer { padding: 0 20px; }
+  #footer p { padding: 0 20px; line-height: 18px; }
+  #footer .buttons { padding: 10px 0 0 0; }
+  #hero .btn, #footer .btn {
+    width: 100%;
+    margin: 0 0 20px;
+    box-sizing: border-box;
+  }
+  #hero .game { opacity: .07; }
+  section header {
+    h1 { font-size: 1.7em; }
+    p { font-size: 1em; }
+  }
+}

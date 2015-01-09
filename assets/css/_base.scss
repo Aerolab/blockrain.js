@@ -4,6 +4,7 @@ section {
 
   header {
     margin-bottom: 60px;
+    padding: 0 20px;
     h1 {
       font-weight: normal;
       margin-bottom: 10px;
@@ -21,7 +22,8 @@ section {
     }
   }
   article {
-    width: 840px;
+    width: 100%;
+    max-width: 840px;
     margin: 0 auto;
   }
 }
