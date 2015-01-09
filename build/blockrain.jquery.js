@@ -47,17 +47,7 @@ $.fn.safekeypress = function(func, cfg) {
 
   return $(this).keypress(keypress).keydown(keydown).keyup(keyup);
 };
-/*!
- * BlockRain.js 0.1.0
- * jQuery plugin that lets you put a playable (and configurable) game of Tetris in your site or just leave it in auto in the background.
- * http://aerolab.github.io/blockrain.js/
- *
- * Copyright (c) 2015 Aerolab <hey@aerolab.co>
- *
- * Released under the MIT license
- * http://aerolab.github.io/blockrain.js/LICENSE.txt
- */
- /**
+/**
  * BlockRain.js is based on http://mrcoles.com/tetris/
  * I haven't seen it on github, but it's one of the better js Tetris clones out there
  */
@@ -1041,17 +1031,7 @@ $.fn.safekeypress = function(func, cfg) {
   });
 
 })(jQuery));
-/*!
- * BlockRain.js 0.1.0
- * jQuery plugin that lets you put a playable (and configurable) game of Tetris in your site or just leave it in auto in the background.
- * http://aerolab.github.io/blockrain.js/
- *
- * Copyright (c) 2015 Aerolab <hey@aerolab.co>
- *
- * Released under the MIT license
- * http://aerolab.github.io/blockrain.js/LICENSE.txt
- */
- /**
+/**
  * Themes. You can add more custom themes to this object.
  */
 var BlockrainThemes = {

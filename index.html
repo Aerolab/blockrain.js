@@ -129,8 +129,9 @@
 
 
 <script src="assets/js/jquery-1.11.1.min.js"></script>
-<script src="blockrain.jquery.src.js"></script>
-<script src="blockrain.jquery.themes.js"></script>
+<script src="src/blockrain.jquery.libs.js"></script>
+<script src="src/blockrain.jquery.src.js"></script>
+<script src="src/blockrain.jquery.themes.js"></script>
 
 <script>
   $('#cover-tetris').blockrain({
@@ -140,12 +141,13 @@
     autoBlockSize: 25,
     theme: 'retro'
   });
-
+  
+/*
   $('#tetris-versus-1').blockrain({
     speed: 50,
     theme: 'vim'
   });
-/*
+
   $('#tetris-versus-2').blockrain({
     autoplay: true,
     speed: 100,
