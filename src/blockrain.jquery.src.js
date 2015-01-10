@@ -73,15 +73,9 @@
       });
 
       this._SetupShapeFactory();
-      /*
       this._SetupFilled();
       this._SetupInfo();
       this._SetupBoard();
-      */
-
-      this._filled = new this._Filled(this);
-      this._info = new this._Info(this);
-      this._board = new this._Board(this);
 
       this._info.init();
       this._board.init();
@@ -110,141 +104,8 @@
 
 
     _board: null,
-
-    _Board: function(game) {
-
-      this.animateDelay = 1000 / game.options.speed;
-      this.cur = null;
-
-      this.lines = 0;
-
-      this.dropCount = 0;
-      this.dropDelay = 5;
-
-      this.init = function() {
-        this.cur = this.nextShape();
-
-        var start = [], blockTypes = [], i, ilen, j, jlen, color;
-
-        // Draw a random blockrain screen
-        blockTypes = Object.keys(game._shapeFactory);
-
-        for (i=0, ilen=this._BLOCK_WIDTH; i<ilen; i++) {
-          for (j=0, jlen=this._randChoice([this._randInt(0, 8), this._randInt(5, 9)]); j<jlen; j++) {
-            if (!color || !this._randInt(0, 3)) color = this._randChoice(blockTypes);
-            start.push([i, this._BLOCK_HEIGHT - j, color]);
-          }
-        }
-
-        if( game.options.showFieldOnStart ) {
-          game._drawBackground();
-          for (i=0, ilen=start.length; i<ilen; i++) {
-            game._drawBlock.apply(this._drawBlock, start[i], false);
-          }
-        }
-
-        game.showStartMessage();
-
-      };
-
-      this.nextShape = function(_set_next_only) {
-        var next = this.next,
-            func, shape, result;
-
-        if( game._shapeFactory[game._info.mode] ) {
-          func = game._shapeFactory[game._info.mode];
-        }
-        else if( game._info.mode == 'nice' || game._info.mode == 'evil' ) {
-          func = this._getNiceShapes;
-        }
-        else {
-          var shapeFuncs = [];
-          $.each(game._shapeFactory, function(k,v) { shapeFuncs.push(v); });
-          func = game._randChoice(shapeFuncs);
-        }
-
-        if (func.no_preview) {
-          this.next = null;
-          if (_set_next_only) return null;
-          shape = func(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, game._info.mode);
-          if (!shape) throw new Error('No shape returned from shape function!', func);
-          shape.init();
-          result = shape;
-        }
-        else {
-          shape = func(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, game._info.mode);
-          if (!shape) throw new Error('No shape returned from shape function!', func);
-          shape.init();
-          this.next = shape;
-          if (_set_next_only) return null;
-          result = next || this.nextShape();
-        }
-
-        if (this._autopilot) { //fun little hack...
-          result = game._getNiceShapes(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, 'normal', result);
-          result.orientation = result.best_orientation;
-          result.x = result.best_x;
-        }
-
-        return result;
-      };
-
-      this.animate = function() {
-        var drop = false,
-            gameOver = false;
-
-
-        game.updateSizes();
-
-        if (!this.paused) {
-
-          this.dropCount++;
-          if( this.dropCount >= this.dropDelay || this._autopilot ) {
-            drop = true;
-            this.dropCount = 0;
-          }
-
-          // test for a collision
-          if (drop) {
-            var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
-            if( game._checkCollisions(x, y+1, blocks, true) ) {
-              drop = false;
-              for (var i=0; i<cur.blocksLen; i+=2) {
-                game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
-                if (y + blocks[i] < 0) {
-                  gameOver = true;
-                }
-              }
-              game._filled.checkForClears();
-              this.cur = this.nextShape();
-            }
-          }
-
-          // Draw the blockrain field
-          game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
-          game._drawBackground();
-          game._filled.draw();
-          this.cur.draw(drop);
-        }
-
-        if( gameOver ) {
-
-          this.options.onGameOver(this._filled.score);
-
-          if( this._autopilot ) {
-            // On autoplay, restart the game automatically
-            this.start();
-          }
-          else {
-            game.showGameOverMessage();
-            game._board.gameOver = true;
-          }
-        } else {
-          window.setTimeout(function() { game._board.animate(); }, this.animateDelay);
-        }
-      };
-
-    },
+    _info: null,
+    _filled: null,
 
 
     showStartMessage: function() {
@@ -254,128 +115,6 @@
     showGameOverMessage: function() {
       this._$gameover.show();
     },
-
-
-    _info: null,
-
-    _Info: function(game) {
-
-      this.mode = game.options.difficulty;
-
-      this.modes = [
-        'normal',
-        'nice',
-        'evil'
-      ];
-
-      this.modesY = 170;
-      this.autopilotY = null;
-
-      this.init = function() {
-        this.mode = game.options.difficulty;
-      };
-
-      this.setMode = function(mode) {
-        this.mode = mode;
-        board.nextShape(true);
-      };
-
-    },
-
-
-    _filled: null,
-
-    _Filled: function(game) {
-
-      this.data = new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT);
-      this.score = 0;
-      this.toClear = {};
-
-      this.check = function(x, y) {
-        return this.data[this.asIndex(x, y)];
-      };
-
-      this.add = function(x, y, blockType) {
-        if (x >= 0 && x < game._BLOCK_WIDTH && y >= 0 && y < game._BLOCK_HEIGHT) {
-          this.data[this.asIndex(x, y)] = blockType;
-        }
-      };
-
-      this.asIndex = function(x, y) {
-        return x + y*game._BLOCK_WIDTH;
-      };
-
-      this.asX = function(index) {
-        return index % game._BLOCK_WIDTH;
-      };
-
-      this.asY = function(index) {
-        return Math.floor(index / game._BLOCK_WIDTH);
-      };
-
-      this.clearAll = function() {
-        this.data = new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT);
-      };
-
-      this._popRow = function(row_to_pop) {
-        for (var i=game._BLOCK_WIDTH*(row_to_pop+1) - 1; i>=0; i--) {
-          this.data[i] = (i >= game._BLOCK_WIDTH ? this.data[i-game._BLOCK_WIDTH] : undefined);
-        }
-      };
-
-      this.checkForClears = function() {
-        var startLines = game._board.lines;
-        var rows = [], i, len, count, mod;
-
-        for (i=0, len=this.data.length; i<len; i++) {
-          mod = this.asX(i);
-          if (mod == 0) count = 0;
-          if (this.data[i] && typeof this.data[i] == 'string') {
-              count += 1;
-          }
-          if (mod == game._BLOCK_WIDTH - 1 && count == game._BLOCK_WIDTH) {
-            rows.push(this.asY(i));
-          }
-        }
-
-        for (i=0, len=rows.length; i<len; i++) {
-          this._popRow(rows[i]);
-          board.lines++;
-          if (board.lines % 10 == 0 && board.dropDelay > 1) {
-            //board.dropDelay -= 2;
-          }
-        }
-
-        var clearedLines = game._board.lines - startLines;
-        this._updateScore(clearedLines);
-      };
-
-      this._updateScore = function(numLines) {
-        if( numLines <= 0 ) { return; }
-        var scores = [0,400,1000,3000,12000];
-        if( numLines >= scores.length ){ numLines = scores.length-1 }
-
-        this.score += scores[numLines];
-        game._$scoreText.text(this.score);
-      };
-
-      this._resetScore = function() {
-        this.score = 0;
-        game._$scoreText.text(this.score);
-      };
-
-      this.draw = function() {
-        for (var i=0, len=this.data.length, row, color; i<len; i++) {
-          if (this.data[i] !== undefined) {
-            row = this.asY(i);
-            var blockType = this.data[i];
-            this._drawBlock(this.asX(i), row, blockType, false);
-          }
-        }
-      };
-
-    },
-
 
     /**
      * Draws the background
@@ -541,7 +280,7 @@
         init: function() {
           $.extend(this, {
             orientation: 0,
-            x: Math.floor(this._BLOCK_WIDTH / 2) - 1,
+            x: Math.floor(game._BLOCK_WIDTH / 2) - 1,
             y: -1
           });
           return this;
@@ -578,6 +317,7 @@
               x = _x === undefined ? this.x : _x,
               y = _y === undefined ? this.y : _y,
               i = 0;
+
           for (; i<this.blocksLen; i += 2) {
             game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, true);
           }
@@ -613,6 +353,7 @@
 
     _SetupShapeFactory: function(){
       var game = this;
+      if( this._shapeFactory !== null ){ return; }
 
       this._shapeFactory = {
         line: function() {
@@ -696,6 +437,259 @@
       };
     },
 
+
+    _SetupFilled: function() {
+      var game = this;
+      if( this._filled !== null ){ return; }
+
+      this._filled = {
+        data: new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT),
+        score: 0,
+        toClear: {},
+        check: function(x, y) {
+          return this.data[this.asIndex(x, y)];
+        },
+        add: function(x, y, blockType) {
+          if (x >= 0 && x < game._BLOCK_WIDTH && y >= 0 && y < game._BLOCK_HEIGHT) {
+            this.data[this.asIndex(x, y)] = blockType;
+          }
+        },
+        asIndex: function(x, y) {
+          return x + y*game._BLOCK_WIDTH;
+        },
+        asX: function(index) {
+          return index % game._BLOCK_WIDTH;
+        },
+        asY: function(index) {
+          return Math.floor(index / game._BLOCK_WIDTH);
+        },
+        clearAll: function() {
+          this.data = new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT);
+        },
+        _popRow: function(row_to_pop) {
+          for (var i=WIDTH*(row_to_pop+1) - 1; i>=0; i--) {
+            this.data[i] = (i >= game._BLOCK_WIDTH ? this.data[i-game._BLOCK_WIDTH] : undefined);
+          }
+        },
+        checkForClears: function() {
+          var startLines = game._board.lines;
+          var rows = [], i, len, count, mod;
+
+          for (i=0, len=this.data.length; i<len; i++) {
+            mod = this.asX(i);
+            if (mod == 0) count = 0;
+            if (this.data[i] && typeof this.data[i] == 'string') {
+              count += 1;
+            }
+            if (mod == game._BLOCK_WIDTH - 1 && count == game._BLOCK_WIDTH) {
+              rows.push(this.asY(i));
+            }
+          }
+
+          for (i=0, len=rows.length; i<len; i++) {
+            this._popRow(rows[i]);
+            game._board.lines++;
+            if( game._board.lines % 10 == 0 && game._board.dropDelay > 1 ) {
+              //board.dropDelay -= 2;
+            }
+          }
+
+          var clearedLines = game._board.lines - startLines;
+          this._updateScore(clearedLines);
+        },
+        _updateScore: function(numLines) {
+          if( numLines <= 0 ) { return; }
+          var scores = [0,400,1000,3000,12000];
+          if( numLines >= scores.length ){ numLines = scores.length-1 }
+
+          this.score += scores[numLines];
+          game._$scoreText.text(this.score);
+        },
+        _resetScore: function() {
+          this.score = 0;
+          game._$scoreText.text(this.score);
+        },
+        draw: function() {
+          for (var i=0, len=this.data.length, row, color; i<len; i++) {
+            if (this.data[i] !== undefined) {
+              row = this.asY(i);
+              var blockType = this.data[i];
+              game._drawBlock(this.asX(i), row, blockType);
+            }
+          }
+        }
+      };
+    },
+
+
+    _SetupInfo: function() {
+
+      var game = this;
+
+      this._info = {
+        mode: game.options.difficulty,
+          modes: [
+        'normal',
+        'nice',
+        'evil'
+      ],
+        modesY: 170,
+        autopilotY: null,
+
+        init: function() {
+        this.mode = game.options.difficulty;
+      },
+        setMode: function(mode) {
+          this.mode = mode;
+          game._board.nextShape(true);
+        }
+      };
+
+    },
+
+
+    _SetupBoard: function() {
+
+      var game = this;
+      var info = this._info
+
+      this._board = {
+        animateDelay: 1000 / game.options.speed,
+          cur: null,
+
+        lines: 0,
+
+        dropCount: 0,
+        dropDelay: 5, //5,
+
+        init: function() {
+          this.cur = this.nextShape();
+
+          var start = [], blockTypes = [], i, ilen, j, jlen, color;
+
+          // Draw a random blockrain screen
+          blockTypes = Object.keys(game._shapeFactory);
+
+          for (i=0, ilen=game._BLOCK_WIDTH; i<ilen; i++) {
+            for (j=0, jlen=game._randChoice([game._randInt(0, 8), game._randInt(5, 9)]); j<jlen; j++) {
+              if (!color || !game._randInt(0, 3)) color = game._randChoice(blockTypes);
+              start.push([i, game._BLOCK_HEIGHT - j, color]);
+            }
+          }
+
+          if( game.options.showFieldOnStart ) {
+            game._drawBackground();
+            for (i=0, ilen=start.length; i<ilen; i++) {
+              game._drawBlock.apply(game, start[i]);
+            }
+          }
+
+          this.showStartMessage();
+
+        },
+        showStartMessage: function() {
+          game._$start.show();
+        },
+        showGameOverMessage: function() {
+          game._$gameover.show();
+        },
+        nextShape: function(_set_next_only) {
+          var next = this.next,
+            func, shape, result;
+
+          if (info.mode == 'nice' || info.mode == 'evil') {
+            func = game._getNiceShapes;
+          }
+          else {
+            func = game._getRandomShape();
+          }
+
+
+
+          if( game.options.no_preview ) {
+            this.next = null;
+            if (_set_next_only) return null;
+            shape = func(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, info.mode);
+            if (!shape) throw new Error('No shape returned from shape function!', func);
+            shape.init();
+            result = shape;
+          }
+          else {
+            shape = func(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, info.mode);
+            if (!shape) throw new Error('No shape returned from shape function!', func);
+            shape.init();
+            this.next = shape;
+            if (_set_next_only) return null;
+            result = next || this.nextShape();
+          }
+
+          if( game._autopilot ) { //fun little hack...
+            game._getNiceShapes(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, 'normal', result);
+            result.orientation = result.best_orientation;
+            result.x = result.best_x;
+          }
+
+          return result;
+        },
+        animate: function() {
+          var drop = false,
+            gameOver = false;
+
+          game.updateSizes();
+
+          if (!this.paused) {
+            this.dropCount++;
+            if( this.dropCount >= this.dropDelay || game._autopilot ) {
+              drop = true;
+              this.dropCount = 0;
+            }
+
+            // test for a collision
+            if (drop) {
+              var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
+              if (game._checkCollisions(x, y+1, blocks, true)) {
+                drop = false;
+                for (var i=0; i<cur.blocksLen; i+=2) {
+                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
+                  if (y + blocks[i] < 0) {
+                    gameOver = true;
+                  }
+                }
+                game._filled.checkForClears();
+                this.cur = this.nextShape();
+              }
+            }
+
+            // Draw the blockrain field
+            game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
+            game._drawBackground();
+            game._filled.draw();
+            this.cur.draw(drop);
+          }
+
+          if( gameOver ) {
+
+            game.options.onGameOver(game._filled.score);
+
+            if( autopilot ) {
+              // On autoplay, restart the game automatically
+              game.start();
+            }
+            else {
+              this.showGameOverMessage();
+              game._board.gameOver = true;
+            }
+          } else {
+
+            window.setTimeout(function() {
+              game._board.animate();
+            }, this.animateDelay);
+
+          }
+
+        }
+      };
+    },
 
     // Utility Functions
     _randInt: function(a, b) { return a + Math.floor(Math.random() * (1 + b - a)); },
@@ -997,6 +991,15 @@
 
       func.no_preview = true;
       return func;
+    },
+
+
+    _getRandomShape: function() {
+      // Todo: The shapefuncs should be cached.
+      var shapeFuncs = [];
+      $.each(this._shapeFactory, function(k,v) { shapeFuncs.push(v); });
+
+      return this._randChoice(shapeFuncs);
     },
 
 
