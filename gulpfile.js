@@ -13,13 +13,14 @@ var getCopyright = function () {
 };
 
 gulp.task('build', function () {
-    gulp.src(['./blockrain.jquery.src.js', './blockrain.jquery.themes.js'])
-    .pipe(header(getCopyright(), {version: getVersion()}))
+    gulp.src(['./src/blockrain.jquery.libs.js', './src/blockrain.jquery.src.js', './src/blockrain.jquery.themes.js'])
     .pipe(concat('blockrain.jquery.js'))
-    .pipe(gulp.dest('./'))
-    .pipe(uglify({preserveComments:'some'}))
+    .pipe(header(getCopyright(), {version: getVersion()}))
+    .pipe(gulp.dest('./build'))
+    .pipe(uglify({preserveComments:'none'}))
     .pipe(concat('blockrain.jquery.min.js'))
-    .pipe(gulp.dest('./'));
+    .pipe(header(getCopyright(), {version: getVersion()}))
+    .pipe(gulp.dest('./build'));
 });
 
 gulp.task('default', ['build']);

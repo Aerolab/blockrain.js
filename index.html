@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui" />
   <link href='http://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="blockrain.css">
+  <link rel="stylesheet" href="src/blockrain.css">
 
 </head>
 <body>
@@ -134,8 +134,9 @@
 
 
 <script src="assets/js/jquery-1.11.1.min.js"></script>
-<script src="blockrain.jquery.src.js"></script>
-<script src="blockrain.jquery.themes.js"></script>
+<script src="src/blockrain.jquery.libs.js"></script>
+<script src="src/blockrain.jquery.src.js"></script>
+<script src="src/blockrain.jquery.themes.js"></script>
 
 <script>
   $('#cover-tetris').blockrain({
@@ -145,9 +146,10 @@
     autoBlockSize: 25,
     theme: 'retro'
   });
+  
 
   $('#tetris-versus-1').blockrain({
-    speed: 50,
+    speed: 20,
     theme: 'vim'
   });
 /*
