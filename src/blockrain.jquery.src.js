@@ -328,7 +328,7 @@
               i = 0;
 
             for (; i<this.blocksLen; i += 2) {
-              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, false);
+              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, true);
             }
           },
           getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
