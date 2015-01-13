@@ -127,9 +127,9 @@
     <a href="blockrain.min.js" download class="btn btn-download">Download</a>
     <a href="https://github.com/Aerolab/blockrain.js" class="btn btn-github">Fork on Github</a>
   </div>
-  <p>Made with love by <a href="#">aerolab</a>, based on <a href="">Carlitos</a> magic</p>
-  <p>We actually have it live on our site. <a href="#">Check it out!</a></p>
-  <p><a href=""><img src="assets/images/kite.png" width="39" alt="Aerolab"></a></p>
+  <p>Made with love by <a href="http://aerolab.co">aerolab</a>, based on code by <a href="http://mrcoles.com/tetris/">Peter Cole</a>.</p>
+  <p>We actually have it live on our site. <a href="http://aerolab.co/culture">Check it out!</a></p>
+  <p><a href="http://aerolab.co"><img src="assets/images/kite.png" width="39" alt="Aerolab"></a></p>
 </footer>
 
 
@@ -144,7 +144,22 @@
     speed: 100,
     autoBlockWidth: true,
     autoBlockSize: 25,
-    theme: 'retro'
+    theme: {
+      background: null,
+      primary: null,
+      secondary: null,
+      stroke: '#000000',
+      innerStroke: '#000000',
+      blocks: {
+        line:     '#fa1e1e',
+        square:   '#f1fa1e',
+        arrow:    '#d838cb',
+        rightHook:'#f5821f',
+        leftHook: '#42c6f0',
+        rightZag: '#4bd838',
+        leftZag:  '#fa1e1e'
+      }
+    }
   });
   
 
@@ -178,25 +193,6 @@
     $demo.blockrain('theme', themes[currentIx]);
     $('#example-slider .theme strong').text( '"'+themes[currentIx]+'"' );
   }
-
-/*
-  $('#tetris-versus-2').blockrain({
-    autoplay: true,
-    speed: 100,
-    theme: 'vim',
-    onGameOver: function(){
-
-    }
-  });
-
-  $('#tetris-play').blockrain({
-    autoplay: false,
-    speed: 20,
-    autoBlockWidth: true,
-    autoBlockSize: 30,
-    theme: 'candy'
-  });
-*/
 </script>
 
 </body>
