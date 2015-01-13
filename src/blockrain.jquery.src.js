@@ -59,7 +59,7 @@
 
       var game = this;
 
-      this.setTheme(this.options.theme);
+      this.theme(this.options.theme);
 
       this._createHolder();
       this._createUI();
@@ -564,23 +564,10 @@
         init: function() {
           this.cur = this.nextShape();
 
-          var start = [], blockTypes = [], i, ilen, j, jlen, color;
-
-          // Draw a random blockrain screen
-          blockTypes = Object.keys(game._shapeFactory);
-
-          for (i=0, ilen=game._BLOCK_WIDTH; i<ilen; i++) {
-            for (j=0, jlen=game._randChoice([game._randInt(0, 8), game._randInt(5, 9)]); j<jlen; j++) {
-              if (!color || !game._randInt(0, 3)) color = game._randChoice(blockTypes);
-              start.push([i, game._BLOCK_HEIGHT - j, color]);
-            }
-          }
-
           if( game.options.showFieldOnStart ) {
             game._drawBackground();
-            for (i=0, ilen=start.length; i<ilen; i++) {
-              game._drawBlock.apply(game, start[i]);
-            }
+            game._board.createRandomBoard();
+            game._board.render();
           }
 
           this.showStartMessage();
@@ -684,6 +671,45 @@
 
           }
 
+        },
+        createRandomBoard: function() {
+
+          var start = [], blockTypes = [], i, ilen, j, jlen, color;
+
+          // Draw a random blockrain screen
+          blockTypes = Object.keys(game._shapeFactory);
+
+          for (i=0, ilen=game._BLOCK_WIDTH; i<ilen; i++) {
+            for (j=0, jlen=game._randChoice([game._randInt(0, 8), game._randInt(5, 9)]); j<jlen; j++) {
+              if (!color || !game._randInt(0, 3)) color = game._randChoice(blockTypes);
+
+              game._filled.add(i, game._BLOCK_HEIGHT - j, color);
+            }
+          }
+
+          /*
+          for (i=0, ilen=WIDTH; i<ilen; i++) {
+            for (j=0, jlen=randChoice([randInt(0, 8), randInt(5, 9)]); j<jlen; j++) {
+              if (!color || !randInt(0, 3)) color = randChoice(blockTypes);
+              start.push([i, HEIGHT - j, color]);
+            }
+          }
+
+          if( options.showFieldOnStart ) {
+            drawBackground();
+            for (i=0, ilen=start.length; i<ilen; i++) {
+              drawBlock.apply(drawBlock, start[i]);
+            }
+          }
+          */
+
+        },
+
+        render: function() {
+          game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
+          game._drawBackground();
+          game._filled.draw();
+          this.cur.draw(false);
         }
       };
 
@@ -723,7 +749,7 @@
      * Find base64 encoded images and load them as image objects, which can be used by the canvas renderer
      */
     _preloadThemeAssets: function() {
-      
+
       var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
 
       if( typeof this._theme.blocks !== 'undefined' ){
@@ -756,18 +782,25 @@
     },
 
 
-    setTheme: function(newTheme){
-console.log(newTheme);
+    theme: function(newTheme){
+
+      if( typeof newTheme === 'undefined' ) {
+        return this.options.theme || this._theme;
+      }
+
       // Setup the theme properly
       if( typeof newTheme === 'string' ) {
+        this.options.theme = newTheme;
         this._theme = BlockrainThemes[newTheme];
       }
       else {
+        this.options.theme = null;
         this._theme = newTheme;
       }
 
       if( typeof this._theme === 'undefined' || this._theme === null ) {
         this._theme = BlockrainThemes['retro'];
+        this.options.theme = 'retro';
       }
 
       if( isNaN(parseInt(this._theme.strokeWidth)) || typeof parseInt(this._theme.strokeWidth) !== 'number' ) {
@@ -776,6 +809,13 @@ console.log(newTheme);
 
       // Load the image assets
       this._preloadThemeAssets();
+
+      if( this._board !== null ) {
+        if( typeof this._theme.background === 'string' ) {
+          this._$canvas.css('background-color', this._theme.background);
+        }
+        this._board.render();
+      }
     },
 
 

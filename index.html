@@ -88,7 +88,7 @@
     <h1>You know you want to</h1>
   </header>
   <article id="example-slider">
-    <div class="example" id="example-vim">
+    <div class="example">
       <div class="theme">theme: <strong>"vim"</strong></div>
       <div class="instructions">
         Use only arrows
@@ -99,7 +99,7 @@
           <div class="key key-right"></div>
         </div>
       </div>
-      <div class="game" id="tetris-versus-1"></div>
+      <div class="game" id="tetris-demo"></div>
     </div>
     <div class="buttons">
       <a href="" class="btn btn-prev">Previous</a>
@@ -148,10 +148,37 @@
   });
   
 
-  $('#tetris-versus-1').blockrain({
+  var $demo = $('#tetris-demo').blockrain({
     speed: 20,
     theme: 'vim'
   });
+
+  $('#example-slider').find('.btn-next').click(function(event){
+    event.preventDefault();
+    switchDemoTheme(true);
+  });
+  $('#example-slider').find('.btn-prev').click(function(event){
+    event.preventDefault();
+    switchDemoTheme(false);
+  });
+
+  function switchDemoTheme(next) {
+
+    var themes = Object.keys(BlockrainThemes);
+
+    var currentTheme = $demo.blockrain('theme');
+    var currentIx = themes.indexOf(currentTheme);
+
+    if( next ) { currentIx++; }
+    else { currentIx--; }
+
+    if( currentIx >= themes.length ){ currentIx = 0; }
+    if( currentIx < 0 ){ currentIx = themes.length-1; }
+
+    $demo.blockrain('theme', themes[currentIx]);
+    $('#example-slider .theme strong').text( '"'+themes[currentIx]+'"' );
+  }
+
 /*
   $('#tetris-versus-2').blockrain({
     autoplay: true,

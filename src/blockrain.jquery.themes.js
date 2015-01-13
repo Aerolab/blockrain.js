@@ -16,6 +16,7 @@ window.BlockrainThemes = {
     }
   },
   'modern': {
+    background: '#000000',
     primary: null,
     secondary: null,
     stroke: null,
@@ -30,6 +31,7 @@ window.BlockrainThemes = {
     }
   },
   'retro': {
+    background: '#000000',
     primary: null,
     secondary: null,
     stroke: '#000000',
@@ -45,16 +47,19 @@ window.BlockrainThemes = {
     }
   },
   'monochrome': {
+    background: '#000000',
     primary: '#ffffff',
     secondary: '#ffffff',
     stroke: '#000000',
     innerStroke: '#000000'
   },
   'aerolab': {
+    background: '#ffffff',
     primary: '#ff7b00',
     secondary: '#000000'
   },
   'chocolate': {
+    background: '#ffffff',
     primary: '#7B3F00',
     secondary: '#7B3F00',
     stroke: '#291811',
