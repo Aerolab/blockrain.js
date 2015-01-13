@@ -59,7 +59,7 @@
 
       var game = this;
 
-      this._setTheme(this.options.theme);
+      this.setTheme(this.options.theme);
 
       this._createHolder();
       this._createUI();
@@ -69,7 +69,7 @@
       this.updateSizes();
 
       $(window).resize(function(){
-        game.updateSizes();
+        //game.updateSizes();
       });
 
       this._SetupShapeFactory();
@@ -83,7 +83,6 @@
       this._setupControls();
 
     },
-
 
 
     _checkCollisions: function(x, y, blocks, checkDownOnly) {
@@ -271,81 +270,6 @@
     },
 
 
-    _Shape: function(game, orientations, symmetrical, blockType) {
-
-      $.extend(this, {
-        x: 0,
-        y: 0,
-        symmetrical: symmetrical,
-        init: function() {
-          $.extend(this, {
-            orientation: 0,
-            x: Math.floor(game._BLOCK_WIDTH / 2) - 1,
-            y: -1
-          });
-          return this;
-        },
-        blockType: blockType,
-        blocksLen: orientations[0].length,
-        orientations: orientations,
-        orientation: 0, // 4 possible
-        rotate: function(right) {
-          var orientation = (this.orientation + (right ? 1 : -1) + 4) % 4;
-
-          //TODO - when past limit - auto shift and remember that too!
-          if( ! this._checkCollisions(this.x, this.y, this.getBlocks(orientation)) ) {
-            this.orientation = orientation;
-          }
-        },
-        moveRight: function() {
-          if( ! this._checkCollisions(this.x + 1, this.y, this.getBlocks()) ) {
-            this.x++;
-          }
-        },
-        moveLeft: function() {
-          if( ! this._checkCollisions(this.x - 1, this.y, this.getBlocks()) ) {
-            this.x--;
-          }
-        },
-        getBlocks: function(orientation) { // optional param
-          return this.orientations[orientation !== undefined ? orientation : this.orientation];
-        },
-        draw: function(drop, _x, _y, _orientation) {
-          if (drop) this.y++;
-
-          var blocks = this.getBlocks(_orientation),
-              x = _x === undefined ? this.x : _x,
-              y = _y === undefined ? this.y : _y,
-              i = 0;
-
-          for (; i<this.blocksLen; i += 2) {
-            game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, true);
-          }
-        },
-        getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
-          var blocks = $.isArray(_blocks) ? _blocks : this.getBlocks(_blocks),
-              i=0, len=blocks.length, minx=999, maxx=-999, miny=999, maxy=-999;
-          for (; i<len; i+=2) {
-            if (blocks[i] < minx) { minx = blocks[i]; }
-            if (blocks[i] > maxx) { maxx = blocks[i]; }
-            if (blocks[i+1] < miny) { miny = blocks[i+1]; }
-            if (blocks[i+1] > maxy) { maxy = blocks[i+1]; }
-          }
-          return {
-            left: minx,
-            right: maxx,
-            top: miny,
-            bottom: maxy,
-            width: maxx - minx,
-            height: maxy - miny
-          };
-        }
-      });
-
-      return this.init();
-    },
-
-
     /**
      * Shapes
      */
@@ -354,6 +278,81 @@
     _SetupShapeFactory: function(){
       var game = this;
       if( this._shapeFactory !== null ){ return; }
+
+
+      function Shape(game, orientations, symmetrical, blockType) {
+
+        $.extend(this, {
+          x: 0,
+          y: 0,
+          symmetrical: symmetrical,
+          init: function() {
+            $.extend(this, {
+              orientation: 0,
+              x: Math.floor(game._BLOCK_WIDTH / 2) - 1,
+              y: -1
+            });
+            return this;
+          },
+          blockType: blockType,
+          blocksLen: orientations[0].length,
+          orientations: orientations,
+          orientation: 0, // 4 possible
+          rotate: function(right) {
+            var orientation = (this.orientation + (right ? 1 : -1) + 4) % 4;
+
+            //TODO - when past limit - auto shift and remember that too!
+            if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
+              this.orientation = orientation;
+            }
+          },
+          moveRight: function() {
+            if (!game._checkCollisions(this.x + 1, this.y, this.getBlocks())) {
+              this.x++;
+            }
+          },
+          moveLeft: function() {
+            if (!game._checkCollisions(this.x - 1, this.y, this.getBlocks())) {
+              this.x--;
+            }
+          },
+          getBlocks: function(orientation) { // optional param
+            return this.orientations[orientation !== undefined ? orientation : this.orientation];
+          },
+          draw: function(drop, _x, _y, _orientation) {
+            if (drop) { this.y++; }
+
+            var blocks = this.getBlocks(_orientation),
+              x = _x === undefined ? this.x : _x,
+              y = _y === undefined ? this.y : _y,
+              i = 0;
+
+            for (; i<this.blocksLen; i += 2) {
+              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, false);
+            }
+          },
+          getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
+            var blocks = $.isArray(_blocks) ? _blocks : this.getBlocks(_blocks),
+              i=0, len=blocks.length, minx=999, maxx=-999, miny=999, maxy=-999;
+            for (; i<len; i+=2) {
+              if (blocks[i] < minx) { minx = blocks[i]; }
+              if (blocks[i] > maxx) { maxx = blocks[i]; }
+              if (blocks[i+1] < miny) { miny = blocks[i+1]; }
+              if (blocks[i+1] > maxy) { maxy = blocks[i+1]; }
+            }
+            return {
+              left: minx,
+              right: maxx,
+              top: miny,
+              bottom: maxy,
+              width: maxx - minx,
+              height: maxy - miny
+            };
+          }
+        });
+
+        return this.init();
+      };
 
       this._shapeFactory = {
         line: function() {
@@ -365,7 +364,7 @@
            */
           var ver = [0, -1, 0, -2, 0, -3, 0, -4],
           hor = [-1, -2, 0, -2, 1, -2, 2, -2];
-          return new game._Shape(game, [ver, hor, ver, hor], true, 'line');
+          return new Shape(game, [ver, hor, ver, hor], true, 'line');
         },
         square: function() {
           /*
@@ -373,7 +372,7 @@
            *  XX
            */
           var s = [0, 0, 1, 0, 0, -1, 1, -1];
-          return new game._Shape(game, [s, s, s, s], true, 'square');
+          return new Shape(game, [s, s, s, s], true, 'square');
         },
         arrow: function() {
           /*
@@ -381,7 +380,7 @@
            *   XOX  OX XOX XO
            *        X   X   X
            */
-          return new game._Shape(game, [
+          return new Shape(game, [
             [0, -1, 1, -1, 2, -1, 1, -2],
             [1, -2, 1, -1, 1, 0, 2, -1],
             [0, -1, 1, -1, 2, -1, 1, 0],
@@ -394,7 +393,7 @@
            *   XOX  O XOX O
            *   X    X     XX
            */
-          return new game._Shape(game, [
+          return new Shape(game, [
             [0, 0, 0, -1, 1, -1, 2, -1],
             [0, -2, 1, 0, 1, -1, 1, -2],
             [0, -1, 1, -1, 2, -1, 2, -2],
@@ -407,7 +406,7 @@
            *   XOX  O XOX O
            *     X XX     X
            */
-          return new game._Shape(game, [
+          return new Shape(game, [
             [2, 0, 0, -1, 1, -1, 2, -1],
             [0, 0, 1, 0, 1, -1, 1, -2],
             [0, -2, 0, -1, 1, -1, 2, -1],
@@ -422,7 +421,7 @@
            */
           var ver = [0, 0, 0, -1, 1, -1, 1, -2],
               hor = [0, -1, 1, -1, 1, 0, 2, 0];
-          return new game._Shape(game, [hor, ver, hor, ver], true, 'leftZag');
+          return new Shape(game, [hor, ver, hor, ver], true, 'leftZag');
         },
         rightZag: function() {
           /*
@@ -432,7 +431,7 @@
            */
           var ver = [0, -2, 0, -1, 1, -1, 1, 0],
               hor = [0, 0, 1, 0, 1, -1, 2, -1];
-          return new game._Shape(game, [hor, ver, hor, ver], true, 'rightZag');
+          return new Shape(game, [hor, ver, hor, ver], true, 'rightZag');
         }
       };
     },
@@ -467,7 +466,7 @@
           this.data = new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT);
         },
         _popRow: function(row_to_pop) {
-          for (var i=WIDTH*(row_to_pop+1) - 1; i>=0; i--) {
+          for (var i=game._BLOCK_WIDTH*(row_to_pop+1) - 1; i>=0; i--) {
             this.data[i] = (i >= game._BLOCK_WIDTH ? this.data[i-game._BLOCK_WIDTH] : undefined);
           }
         },
@@ -528,11 +527,11 @@
 
       this._info = {
         mode: game.options.difficulty,
-          modes: [
-        'normal',
-        'nice',
-        'evil'
-      ],
+        modes: [
+          'normal',
+          'nice',
+          'evil'
+        ],
         modesY: 170,
         autopilotY: null,
 
@@ -598,13 +597,11 @@
             func, shape, result;
 
           if (info.mode == 'nice' || info.mode == 'evil') {
-            func = game._getNiceShapes;
+            func = game._niceShapes;
           }
           else {
-            func = game._getRandomShape();
+            func = game._randomShapes();
           }
-
-
 
           if( game.options.no_preview ) {
             this.next = null;
@@ -624,7 +621,7 @@
           }
 
           if( game._autopilot ) { //fun little hack...
-            game._getNiceShapes(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, 'normal', result);
+            game._niceShapes(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, 'normal', result);
             result.orientation = result.best_orientation;
             result.x = result.best_x;
           }
@@ -635,7 +632,7 @@
           var drop = false,
             gameOver = false;
 
-          game.updateSizes();
+          //game.updateSizes();
 
           if (!this.paused) {
             this.dropCount++;
@@ -671,7 +668,7 @@
 
             game.options.onGameOver(game._filled.score);
 
-            if( autopilot ) {
+            if( game._autopilot ) {
               // On autoplay, restart the game automatically
               game.start();
             }
@@ -689,6 +686,8 @@
 
         }
       };
+
+      game._niceShapes = game._getNiceShapes();
     },
 
     // Utility Functions
@@ -755,8 +754,8 @@
     },
 
 
-    _setTheme: function(newTheme){
-
+    setTheme: function(newTheme){
+console.log(newTheme);
       // Setup the theme properly
       if( typeof newTheme === 'string' ) {
         this._theme = BlockrainThemes[newTheme];
@@ -801,47 +800,49 @@
 
     _createUI: function() {
 
+      var game = this;
+
       // Score
-      this._$score = $(
+      game._$score = $(
         '<div class="blockrain-score-holder" style="position:absolute;">'+
           '<div class="blockrain-score">'+
             '<div class="blockrain-score-msg">'+ this.options.scoreText +'</div>'+
             '<div class="blockrain-score-num">0</div>'+
           '</div>'+
         '</div>').hide();
-      this._$scoreText = this._$score.find('.blockrain-score-num');
-      this._$gameholder.append(this._$score);
+      game._$scoreText = game._$score.find('.blockrain-score-num');
+      game._$gameholder.append(game._$score);
 
       // Create the start menu
-      this._$start = $(
+      game._$start = $(
         '<div class="blockrain-start-holder" style="position:absolute;">'+
           '<div class="blockrain-start">'+
             '<div class="blockrain-start-msg">'+ this.options.playText +'</div>'+
             '<a class="blockrain-btn blockrain-start-btn">'+ this.options.playButtonText +'</a>'+
           '</div>'+
         '</div>').hide();
-      this._$gameholder.append(this._$start);
-      
-      this._$start.find('.blockrain-start-btn').click(function(event){
+      game._$gameholder.append(game._$start);
+
+      game._$start.find('.blockrain-start-btn').click(function(event){
         event.preventDefault();
-        this.start();
-        this.options.onStart();
+        game.start();
+        game.options.onStart();
       });
 
       // Create the game over menu
-      this._$gameover = $(
+      game._$gameover = $(
         '<div class="blockrain-game-over-holder" style="position:absolute;">'+
           '<div class="blockrain-game-over">'+
             '<div class="blockrain-game-over-msg">'+ this.options.gameOverText +'</div>'+
             '<a class="blockrain-btn blockrain-game-over-btn">'+ this.options.restartButtonText +'</a>'+
           '</div>'+
         '</div>').hide();
-      this._$gameover.find('.blockrain-game-over-btn').click(function(event){
+      game._$gameover.find('.blockrain-game-over-btn').click(function(event){
         event.preventDefault();
-        this.start();
-        this.options.onRestart();
+        game.start();
+        game.options.onRestart();
       });
-      this._$gameholder.append(this._$gameover);
+      game._$gameholder.append(game._$gameover);
 
     },
 
@@ -877,6 +878,8 @@
        *  - maybe give empty spots scores? and try to maximize the score?
        */
 
+      var game = this;
+
       var shapes = {},
           attr;
 
@@ -889,7 +892,7 @@
 
         // base score
         for (i=0; i<len; i+=2) {
-          score += possibles[this._filled.asIndex(x + blocks[i], y + blocks[i+1])] || 0;
+          score += possibles[game._filled.asIndex(x + blocks[i], y + blocks[i+1])] || 0;
         }
 
         // overlap score -- //TODO - don't count overlaps if cleared?
@@ -904,7 +907,7 @@
         for (tx in bottoms) {
           tx = parseInt(tx);
           for (ty=bottoms[tx]+1, i=0; y+ty<height; ty++, i++) {
-            if (!this._filled.check(x + tx, y + ty)) {
+            if (!game._filled.check(x + tx, y + ty)) {
               overlaps += i == 0 ? 2 : 1; //TODO-score better
               //if (i == 0) overlaps += 1;
               break;
@@ -937,9 +940,9 @@
 
         for (x=0; x<width; x++) {
           for (y=0; y<=height; y++) {
-            if (y == height || this._filled.check(x, y)) {
+            if (y == height || filled.check(x, y)) {
               for (py=y-4; py<y; py++) {
-                possibles[this._filled.asIndex(x, py)] = py; //TODO - figure out better scoring?
+                possibles[filled.asIndex(x, py)] = py; //TODO - figure out better scoring?
               }
               break;
             }
@@ -960,9 +963,9 @@
             // try each possible position...
             for (x=-bounds.left; x<width - bounds.width; x++) {
               for (y=-1; y<height - bounds.bottom; y++) {
-                if( checkCollisions(x, y + 1, blocks, true) ) {
+                if( game._checkCollisions(x, y + 1, blocks, true) ) {
                   // collision
-                  score = scoreBlocks(possibles, blocks, x, y, this._filled, width, height);
+                  score = scoreBlocks(possibles, blocks, x, y, filled, width, height);
                   if (score > best_score_for_shape) {
                     best_score_for_shape = score;
                     best_orientation_for_shape = i;
@@ -994,7 +997,7 @@
     },
 
 
-    _getRandomShape: function() {
+    _randomShapes: function() {
       // Todo: The shapefuncs should be cached.
       var shapeFuncs = [];
       $.each(this._shapeFactory, function(k,v) { shapeFuncs.push(v); });
@@ -1008,6 +1011,9 @@
      * Controls
      */
     _setupControls: function() {
+
+      var game = this;
+
       if( this.options.autoplay ) {
         // On autoplay, start the game right away
         this._autopilot = true;
@@ -1016,26 +1022,27 @@
       else {
 
         $(document).keyup(function(evt) {
-            return (!board.started && (evt.keyCode == 13 || evt.keyCode == 32)) ? startBoard(evt) : true;
+          evt.preventDefault();
+          return (!game._board.started && (evt.keyCode == 13 || evt.keyCode == 32)) ? game.start() : true;
         });
 
         $(document).keyup(function(evt) {
           if (evt.keyCode == 80) { /*p*/
-            board.paused = !board.paused;
+            game._board.paused = !game._board.paused;
           }
         });
 
         $(document).safekeypress(function(evt) {
           var caught = false;
-          if (board.cur) {
+          if (game._board.cur) {
               caught = true;
               switch(evt.keyCode) {
-                case 37: /*left*/ board.cur.moveLeft(); break;
-                case 38: /*up*/ board.cur.rotate(true); break;
-                case 39: /*right*/ board.cur.moveRight(); break;
-                case 40: /*down*/ board.dropCount = board.dropDelay; break;
-                case 88: /*x*/ board.cur.rotate(true); break;
-                case 90: /*z*/ board.cur.rotate(false); break;
+                case 37: /*left*/ game._board.cur.moveLeft(); break;
+                case 38: /*up*/ game._board.cur.rotate(true); break;
+                case 39: /*right*/ game._board.cur.moveRight(); break;
+                case 40: /*down*/ game._board.dropCount = game._board.dropDelay; break;
+                case 88: /*x*/ game._board.cur.rotate(true); break;
+                case 90: /*z*/ game._board.cur.rotate(false); break;
               default: caught = false;
               }
           }
