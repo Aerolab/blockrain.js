@@ -62,15 +62,32 @@
       this.options.onRestart.call(this.element);
     },
 
+    gameover: function() {
+      this.showGameOverMessage();
+      this._board.gameover = true;
+      this.options.onGameOver.call(this.element, this._filled.score);
+    },
+
     _doStart: function() {
       this._filled.clearAll();
       this._filled._resetScore();
+      this._board.cur = this._board.nextShape();
       this._board.started = true;
+      this._board.gameover = false;
       this._board.animate();
 
       this._$start.fadeOut(150);
       this._$gameover.fadeOut(150);
       this._$score.fadeIn(150);
+    },
+
+
+    pause: function() {
+      this._board.paused = true;
+    },
+
+    resume: function() {
+      this._board.paused = false;
     },
 
     autoplay: function(enable) {
@@ -591,6 +608,7 @@
           return Math.floor(index / game._BLOCK_WIDTH);
         },
         clearAll: function() {
+          delete this.data;
           this.data = new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT);
         },
         _popRow: function(row_to_pop) {
@@ -691,6 +709,10 @@
         dropCount: 0,
         dropDelay: 5, //5,
 
+
+        started: false,
+        gameover: false,
+
         init: function() {
           this.cur = this.nextShape();
 
@@ -751,7 +773,8 @@
 
           //game.updateSizes();
 
-          if (!this.paused) {
+          if( !this.paused && !this.gameover ) {
+
             this.dropCount++;
             if( this.dropCount >= this.dropDelay || game.options.autoplay ) {
               drop = true;
@@ -783,16 +806,15 @@
 
           if( gameOver ) {
 
-            game.options.onGameOver.call(game.element, game._filled.score);
+            this.gameover = true;
+
+            game.gameover();
 
             if( game.options.autoplay && game.options.autoplayRestart ) {
               // On autoplay, restart the game automatically
               game.restart();
             }
-            else {
-              this.showGameOverMessage();
-              game._board.gameOver = true;
-            }
+
           } else {
 
             // Update the speed

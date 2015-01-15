@@ -120,11 +120,21 @@ There are a few utility methods available to control the game. $game represents 
 ```js
 // Start the game
 $game.blockrain('start');
-```
 
-```js
 // Restart the game
 $game.blockrain('restart');
+
+// Trigger a game over
+$game.blockrain('gameover');
+```
+
+
+```js
+// Pause
+$game.blockrain('pause');
+
+// Resume
+$game.blockrain('resume');
 ```
 
 ```js
