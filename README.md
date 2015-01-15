@@ -29,7 +29,7 @@ $('.game').blockrain({ autoplay: true, autoplayRestart: true });
 
 # Themes
 
-Blockrain comes with many themes out-of-the-box, but you can create custom ones by **adding them to window.BlockRainThemes**. You have multiple settings and can even use **base64-encoded textures**.
+Blockrain comes with many themes out-of-the-box, but you can create custom ones by **adding them to BlockrainThemes**. You have multiple settings and can even use **custom textures** (base64-encoded).
 
 ```js
 {
