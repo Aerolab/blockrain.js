@@ -29,6 +29,105 @@
       onGameOver: function(){}
     },
 
+
+    /**
+     * Start/Restart Game
+     */
+    start: function() {
+      this._filled.clearAll();
+      this._filled._resetScore();
+      this._board.started = true;
+      this._board.animate();
+
+      this._$start.fadeOut(150);
+      this._$gameover.fadeOut(150);
+      this._$score.fadeIn(150);
+    },
+
+    autoplay: function(enable) {
+      if( typeof enable !== 'boolean' ){ enable = true; }
+
+      // On autoplay, start the game right away
+      this.options.autoplay = enable;
+      if( enable && ! this._board.started ) {
+        this.start();
+      }
+      this._setupControls( ! enable );
+    },
+
+    controls: function(enable) {
+      if( typeof enable !== 'boolean' ){ enable = true; }
+      this._setupControls(enable);
+    },
+
+    showStartMessage: function() {
+      this._$start.show();
+    },
+
+    showGameOverMessage: function() {
+      this._$gameover.show();
+    },
+
+    /**
+     * Update the sizes of the renderer (this makes the game responsive)
+     */
+    updateSizes: function() {
+
+      this._PIXEL_WIDTH = this.element.innerWidth();
+      this._PIXEL_HEIGHT = this.element.innerHeight();
+
+      this._BLOCK_WIDTH = this.options.blockWidth;
+      this._BLOCK_HEIGHT = Math.floor(this.element.innerHeight() / this.element.innerWidth() * this._BLOCK_WIDTH);
+
+      this._block_size = Math.floor(this._PIXEL_WIDTH / this._BLOCK_WIDTH);
+      this._border_width = 2;
+
+      // Recalculate the pixel width and height so the canvas always has the best possible size
+      this._PIXEL_WIDTH = this._block_size * this._BLOCK_WIDTH;
+      this._PIXEL_HEIGHT = this._block_size * this._BLOCK_HEIGHT;
+
+      this._$canvas .attr('width', this._PIXEL_WIDTH)
+                    .attr('height', this._PIXEL_HEIGHT);
+    },
+
+
+    theme: function(newTheme){
+
+      if( typeof newTheme === 'undefined' ) {
+        return this.options.theme || this._theme;
+      }
+
+      // Setup the theme properly
+      if( typeof newTheme === 'string' ) {
+        this.options.theme = newTheme;
+        this._theme = BlockrainThemes[newTheme];
+      }
+      else {
+        this.options.theme = null;
+        this._theme = newTheme;
+      }
+
+      if( typeof this._theme === 'undefined' || this._theme === null ) {
+        this._theme = BlockrainThemes['retro'];
+        this.options.theme = 'retro';
+      }
+
+      if( isNaN(parseInt(this._theme.strokeWidth)) || typeof parseInt(this._theme.strokeWidth) !== 'number' ) {
+        this._theme.strokeWidth = 2;
+      }
+
+      // Load the image assets
+      this._preloadThemeAssets();
+
+      if( this._board !== null ) {
+        if( typeof this._theme.background === 'string' ) {
+          this._$canvas.css('background-color', this._theme.background);
+        }
+        this._board.render();
+      }
+    },
+
+
     // Theme
     _theme: {
 
@@ -48,10 +147,6 @@
     // Canvas
     _canvas: null,
     _ctx: null,
-
-
-    // Useful stuff
-    _autopilot: false,
 
 
     // Initialization
@@ -80,7 +175,11 @@
       this._info.init();
       this._board.init();
 
-      this._setupControls();
+      if( this.options.autoplay ) {
+        this.autoplay(true);
+      } else {
+        this._setupControls(true);
+      }
 
     },
 
@@ -106,14 +205,6 @@
     _info: null,
     _filled: null,
 
-
-    showStartMessage: function() {
-      this._$start.show();
-    },
-
-    showGameOverMessage: function() {
-      this._$gameover.show();
-    },
 
     /**
      * Draws the background
@@ -607,7 +698,7 @@
             result = next || this.nextShape();
           }
 
-          if( game._autopilot ) { //fun little hack...
+          if( game.options.autoplay ) { //fun little hack...
             game._niceShapes(game._filled, game._checkCollisions, game._BLOCK_WIDTH, game._BLOCK_HEIGHT, 'normal', result);
             result.orientation = result.best_orientation;
             result.x = result.best_x;
@@ -623,7 +714,7 @@
 
           if (!this.paused) {
             this.dropCount++;
-            if( this.dropCount >= this.dropDelay || game._autopilot ) {
+            if( this.dropCount >= this.dropDelay || game.options.autoplay ) {
               drop = true;
               this.dropCount = 0;
             }
@@ -655,7 +746,7 @@
 
             game.options.onGameOver(game._filled.score);
 
-            if( game._autopilot ) {
+            if( game.options.autoplay ) {
               // On autoplay, restart the game automatically
               game.start();
             }
@@ -723,29 +814,6 @@
 
 
     /**
-     * Update the sizes of the renderer (this makes the game responsive)
-     */
-    updateSizes: function() {
-
-      this._PIXEL_WIDTH = this.element.innerWidth();
-      this._PIXEL_HEIGHT = this.element.innerHeight();
-
-      this._BLOCK_WIDTH = this.options.blockWidth;
-      this._BLOCK_HEIGHT = Math.floor(this.element.innerHeight() / this.element.innerWidth() * this._BLOCK_WIDTH);
-
-      this._block_size = Math.floor(this._PIXEL_WIDTH / this._BLOCK_WIDTH);
-      this._border_width = 2;
-
-      // Recalculate the pixel width and height so the canvas always has the best possible size
-      this._PIXEL_WIDTH = this._block_size * this._BLOCK_WIDTH;
-      this._PIXEL_HEIGHT = this._block_size * this._BLOCK_HEIGHT;
-
-      this._$canvas .attr('width', this._PIXEL_WIDTH)
-                    .attr('height', this._PIXEL_HEIGHT);
-    },
-
-
-    /**
      * Find base64 encoded images and load them as image objects, which can be used by the canvas renderer
      */
     _preloadThemeAssets: function() {
@@ -779,43 +847,6 @@
         }
       }
 
-    },
-
-
-    theme: function(newTheme){
-
-      if( typeof newTheme === 'undefined' ) {
-        return this.options.theme || this._theme;
-      }
-
-      // Setup the theme properly
-      if( typeof newTheme === 'string' ) {
-        this.options.theme = newTheme;
-        this._theme = BlockrainThemes[newTheme];
-      }
-      else {
-        this.options.theme = null;
-        this._theme = newTheme;
-      }
-
-      if( typeof this._theme === 'undefined' || this._theme === null ) {
-        this._theme = BlockrainThemes['retro'];
-        this.options.theme = 'retro';
-      }
-
-      if( isNaN(parseInt(this._theme.strokeWidth)) || typeof parseInt(this._theme.strokeWidth) !== 'number' ) {
-        this._theme.strokeWidth = 2;
-      }
-
-      // Load the image assets
-      this._preloadThemeAssets();
-
-      if( this._board !== null ) {
-        if( typeof this._theme.background === 'string' ) {
-          this._$canvas.css('background-color', this._theme.background);
-        }
-        this._board.render();
-      }
     },
 
 
@@ -895,21 +926,6 @@
         this.options.blockWidth = Math.ceil( this.element.width() / this.options.autoBlockSize );
       }
 
-    },
-
-
-    /**
-     * Start/Restart Game
-     */
-    start: function() {
-      this._filled.clearAll();
-      this._filled._resetScore();
-      this._board.started = true;
-      this._board.animate();
-
-      this._$start.fadeOut(150);
-      this._$gameover.fadeOut(150);
-      this._$score.fadeIn(150);
     },
 
 
@@ -1048,50 +1064,74 @@
     },
 
 
-
     /**
      * Controls
      */
-    _setupControls: function() {
+    _setupControls: function(enable) {
 
       var game = this;
 
-      if( this.options.autoplay ) {
-        // On autoplay, start the game right away
-        this._autopilot = true;
-        this.start();
+      // Handlers: These are used to be able to bind/unbind controls
+      var handleKeyPress = function(evt) {
+        var caught = false;
+        if (game._board.cur) {
+          caught = true;
+          switch(evt.keyCode) {
+            case 37: /*left*/   game._board.cur.moveLeft(); break;
+            case 38: /*up*/     game._board.cur.rotate(true); break;
+            case 39: /*right*/  game._board.cur.moveRight(); break;
+            case 40: /*down*/   game._board.dropCount = game._board.dropDelay; break;
+            case 88: /*x*/      game._board.cur.rotate(true); break;
+            case 90: /*z*/      game._board.cur.rotate(false); break;
+            default: caught = false;
+          }
+        }
+        if (caught) evt.preventDefault();
+        return !caught;
+      }
+
+      function isStopKey(evt) {
+        var cfg = {
+          stopKeys: {37:1, 38:1, 39:1, 40:1}
+        };
+
+        var isStop = (cfg.stopKeys[evt.keyCode] || (cfg.moreStopKeys && cfg.moreStopKeys[evt.keyCode]));
+        if (isStop) evt.preventDefault();
+        return isStop;
+      }
+
+      function getKey(evt) { return 'safekeypress.' + evt.keyCode; }
+
+      function keypress(evt) {
+        var key = getKey(evt),
+            val = ($.data(this, key) || 0) + 1;
+        $.data(this, key, val);
+        if (val > 0) return handleKeyPress.call(this, evt);
+        return isStopKey(evt);
+      }
+
+      function keydown(evt) {
+        var key = getKey(evt);
+        $.data(this, key, ($.data(this, key) || 0) - 1);
+        return handleKeyPress.call(this, evt);
+      }
+
+      function keyup(evt) {
+        $.data(this, getKey(evt), 0);
+        return isStopKey(evt);
+      }
+
+      // Unbind everything by default
+      // Use event namespacing so we don't ruin other keypress events
+      $(document).unbind('keypress.blockrain').unbind('keydown.blockrain').unbind('keyup.blockrain');
+
+      if( game.options.autoplay ) {
+
       }
       else {
-
-        $(document).keyup(function(evt) {
-          evt.preventDefault();
-          return (!game._board.started && (evt.keyCode == 13 || evt.keyCode == 32)) ? game.start() : true;
-        });
-
-        $(document).keyup(function(evt) {
-          if (evt.keyCode == 80) { /*p*/
-            game._board.paused = !game._board.paused;
-          }
-        });
-
-        $(document).safekeypress(function(evt) {
-          var caught = false;
-          if (game._board.cur) {
-              caught = true;
-              switch(evt.keyCode) {
-                case 37: /*left*/ game._board.cur.moveLeft(); break;
-                case 38: /*up*/ game._board.cur.rotate(true); break;
-                case 39: /*right*/ game._board.cur.moveRight(); break;
-                case 40: /*down*/ game._board.dropCount = game._board.dropDelay; break;
-                case 88: /*x*/ game._board.cur.rotate(true); break;
-                case 90: /*z*/ game._board.cur.rotate(false); break;
-              default: caught = false;
-              }
-          }
-          if (caught) evt.preventDefault();
-          return !caught;
-        });
-
+        if( enable ) {
+          $(document).bind('keypress.blockrain', keypress).bind('keydown.blockrain', keydown).bind('keyup.blockrain', keyup);
+        }
       }
     }
 
