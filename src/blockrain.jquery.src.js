@@ -48,6 +48,10 @@
       this._$score.fadeIn(150);
     },
 
+    restart: function() {
+      this.start();
+    },
+
     autoplay: function(enable) {
       if( typeof enable !== 'boolean' ){ enable = true; }
 

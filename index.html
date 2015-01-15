@@ -199,13 +199,15 @@
   });
   
 
-  var versusSpeed = 1000;
+  var versusSpeed = 500;
 
   var $versus1 = $('#tetris-versus-1 .game').blockrain({
     autoplay: true,
     autoplayRestart: true,
     speed: versusSpeed,
     onGameOver: function() {
+      $versus1.blockrain('restart');
+      $versus2.blockrain('restart');
       var $score = $versus2.parent().find('.score');
       $score.text( parseInt($score.text()) + 1 );
     }
@@ -215,6 +217,8 @@
     autoplayRestart: true,
     speed: versusSpeed,
     onGameOver: function() {
+      $versus1.blockrain('restart');
+      $versus2.blockrain('restart');
       var $score = $versus1.parent().find('.score');
       $score.text( parseInt($score.text()) + 1 );
     }
