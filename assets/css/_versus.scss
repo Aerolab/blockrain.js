@@ -1,0 +1,74 @@
+#versus-arena {
+  background: #000;
+  width: 590px;
+  height: 375px;
+  border-radius: 50%/5%;
+  position: relative;
+  padding-top: 45px;
+
+  &:before {
+    content: "";
+    background: #000;
+    position: absolute;
+    top: 5%;
+    bottom: 5%;
+    left: -5%;
+    right: -5%;
+    border-radius: 5%/50%;
+  }
+  .game-holder {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 15px;
+    position: relative;
+  }
+  .game {
+    width: 190px;
+    height: 330px;
+    position: static;
+  }
+  .score {
+    position: absolute;
+    right: 100%;
+    margin-right: 20px;
+    color: #c2ffad;
+    font-size: 20px;
+    text-align: right;
+    line-height: 20px;
+    &:after { 
+      content: "Won";
+      display: block;
+      font-size: 14px;
+    }
+  }
+  .blockrain-score-holder {
+    color: #c2ffad;
+    line-height: 20px;
+    .blockrain-score-num { font-weight: normal; }
+  }
+  #tetris-versus-1 {
+    .blockrain-score-holder {
+      top: auto;
+      right: 100%;
+      bottom: 0px;
+      margin-right: 20px;
+    }
+  }
+  #tetris-versus-2 {
+    .blockrain-score-holder {
+      top: auto;
+      right: auto;
+      left: 100%;
+      bottom: 0px;
+      margin-left: 20px;
+      text-align: left;
+    }
+    .score {
+      right: auto;
+      left: 100%;
+      text-align: left;
+      margin-right: 0;
+      margin-left: 20px;
+    }
+  }
+}
