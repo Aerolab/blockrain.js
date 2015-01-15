@@ -42,7 +42,7 @@
       onRestart: function(){},
       onGameOver: function(score){},
 
-      onClear: function(lines, scoreIncrement, score){}
+      onLine: function(lines, scoreIncrement, score){}
     },
 
 
@@ -50,6 +50,16 @@
      * Start/Restart Game
      */
     start: function() {
+      this._doStart();
+      this.options.onStart.call(this.element);
+    },
+
+    restart: function() {
+      this._doStart();
+      this.options.onRestart.call(this.element);
+    },
+
+    _doStart: function() {
       this._filled.clearAll();
       this._filled._resetScore();
       this._board.started = true;
@@ -66,7 +76,7 @@
       // On autoplay, start the game right away
       this.options.autoplay = enable;
       if( enable && ! this._board.started ) {
-        this.start();
+        this._doStart();
       }
       this._setupControls( ! enable );
     },
@@ -619,7 +629,7 @@
           this.score += scores[numLines];
           game._$scoreText.text(this.score);
 
-          game.options.onClear.call(game.element, numLines, scores[numLines], this.score);
+          game.options.onLine.call(game.element, numLines, scores[numLines], this.score);
         },
         _resetScore: function() {
           this.score = 0;
@@ -774,7 +784,7 @@
 
             if( game.options.autoplay && game.options.autoplayRestart ) {
               // On autoplay, restart the game automatically
-              game.start();
+              game.restart();
             }
             else {
               this.showGameOverMessage();
@@ -928,7 +938,6 @@
       game._$start.find('.blockrain-start-btn').click(function(event){
         event.preventDefault();
         game.start();
-        game.options.onStart.call(game.element);
       });
 
       // Create the game over menu
@@ -941,8 +950,7 @@
         '</div>').hide();
       game._$gameover.find('.blockrain-game-over-btn').click(function(event){
         event.preventDefault();
-        game.start();
-        game.options.onRestart.call(game.element);
+        game.restart();
       });
       game._$gameholder.append(game._$gameover);
 
