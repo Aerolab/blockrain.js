@@ -10,27 +10,30 @@
   $.widget('aerolab.blockrain', {
 
     options: {
-      autoplay: false,
-      autoplayRestart: true,
-      showFieldOnStart: true,
-      theme: null,
-      blockWidth: 10,
-      autoBlockWidth: false,
-      autoBlockSize: 24,
-      difficulty: 'normal',
-      speed: 20,
+      autoplay: false, // Let a bot play the game
+      autoplayRestart: true, // Restart the game automatically once a bot loses
+      showFieldOnStart: true, // Show a bunch of random blocks on the start screen (it looks nice)
+      theme: null, // The theme name or a theme object
+      blockWidth: 10, // How many blocks wide the field is (The standard is 10 blocks)
+      autoBlockWidth: false, // The blockWidth is dinamically calculated based on the autoBlockSize. Disabled blockWidth. Useful for responsive backgrounds
+      autoBlockSize: 24, // The max size of a block for autowidth mode
+      difficulty: 'normal', // Difficulty (normal|nice|evil).
+      speed: 20, // The speed of the game. The higher, the faster the pieces go.
 
+      // Copy
       playText: 'Let\'s play some Tetris',
       playButtonText: 'Play',
       gameOverText: 'Game Over',
       restartButtonText: 'Play Again',
       scoreText: 'Score',
 
+      // Basic Callbacks
       onStart: function(){},
       onRestart: function(){},
       onGameOver: function(score){},
 
-      onClear: function(lines, scoreIncrement, score){}
+      // When a line is made. Returns the number of lines, score assigned and total score
+      onLine: function(lines, scoreIncrement, score){}
     },
 
 
@@ -38,9 +41,27 @@
      * Start/Restart Game
      */
     start: function() {
+      this._doStart();
+      this.options.onStart.call(this.element);
+    },
+
+    restart: function() {
+      this._doStart();
+      this.options.onRestart.call(this.element);
+    },
+
+    gameover: function() {
+      this.showGameOverMessage();
+      this._board.gameover = true;
+      this.options.onGameOver.call(this.element, this._filled.score);
+    },
+
+    _doStart: function() {
       this._filled.clearAll();
       this._filled._resetScore();
+      this._board.cur = this._board.nextShape();
       this._board.started = true;
+      this._board.gameover = false;
       this._board.animate();
 
       this._$start.fadeOut(150);
@@ -48,8 +69,13 @@
       this._$score.fadeIn(150);
     },
 
-    restart: function() {
-      this.start();
+
+    pause: function() {
+      this._board.paused = true;
+    },
+
+    resume: function() {
+      this._board.paused = false;
     },
 
     autoplay: function(enable) {
@@ -58,7 +84,7 @@
       // On autoplay, start the game right away
       this.options.autoplay = enable;
       if( enable && ! this._board.started ) {
-        this.start();
+        this._doStart();
       }
       this._setupControls( ! enable );
     },
@@ -570,6 +596,7 @@
           return Math.floor(index / game._BLOCK_WIDTH);
         },
         clearAll: function() {
+          delete this.data;
           this.data = new Array(game._BLOCK_WIDTH * game._BLOCK_HEIGHT);
         },
         _popRow: function(row_to_pop) {
@@ -611,7 +638,7 @@
           this.score += scores[numLines];
           game._$scoreText.text(this.score);
 
-          game.options.onClear.call(game.element, numLines, scores[numLines], this.score);
+          game.options.onLine.call(game.element, numLines, scores[numLines], this.score);
         },
         _resetScore: function() {
           this.score = 0;
@@ -669,6 +696,10 @@
 
         dropCount: 0,
         dropDelay: 5, //5,
+
+
+        started: false,
+        gameover: false,
 
         init: function() {
           this.cur = this.nextShape();
@@ -730,7 +761,8 @@
 
           //game.updateSizes();
 
-          if (!this.paused) {
+          if( !this.paused && !this.gameover ) {
+
             this.dropCount++;
             if( this.dropCount >= this.dropDelay || game.options.autoplay ) {
               drop = true;
@@ -762,16 +794,15 @@
 
           if( gameOver ) {
 
-            game.options.onGameOver.call(game.element, game._filled.score);
+            this.gameover = true;
+
+            game.gameover();
 
             if( game.options.autoplay && game.options.autoplayRestart ) {
               // On autoplay, restart the game automatically
-              game.start();
+              game.restart();
             }
-            else {
-              this.showGameOverMessage();
-              game._board.gameOver = true;
-            }
+
           } else {
 
             // Update the speed
@@ -920,7 +951,6 @@
       game._$start.find('.blockrain-start-btn').click(function(event){
         event.preventDefault();
         game.start();
-        game.options.onStart.call(game.element);
       });
 
       // Create the game over menu
@@ -933,8 +963,7 @@
         '</div>').hide();
       game._$gameover.find('.blockrain-game-over-btn').click(function(event){
         event.preventDefault();
-        game.start();
-        game.options.onRestart.call(game.element);
+        game.restart();
       });
       game._$gameholder.append(game._$gameover);
 
