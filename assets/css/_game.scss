@@ -6,3 +6,24 @@
   height: 500px;
   margin: 0px auto;
 }
+
+#versus {
+  .game-holder {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .score {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+  .game {
+    width: 250px;
+    height: 500px;
+  }
+  .vs {
+    display: inline-block;
+    font-size: 32px;
+    padding: 20px;
+    vertical-align: middle;
+  }
+}

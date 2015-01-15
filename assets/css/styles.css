@@ -1,127 +1,23 @@
-html, body {
-  background: white;
-  padding: 0;
-  margin: 0;
-  font-family: "Orbitron", "Arial", sans-serif;
-  line-height: 160%;
-  font-size: 16px;
-  color: #303030;
-}
+/*
+Errno::ENOENT: No such file or directory - styles.scss
 
-
-/* Stuff */
-.btn {
-  position: relative;
-  display: inline-block;
-  background: none;
-  color: #ffffff;
-  text-decoration: none;
-  border: 2px solid #ffffff;
-  padding: 15px 30px;
-  text-align: center;
-}
-.btn::before {
-  position: absolute;
-  content: "";
-  top: 100%;
-  left: 0px;
-  bottom: 0px;
-  right: 0px;
-  border: 2px solid #ffffff;
-  border-top: none;
-  border-right: none;
-  transition: all 0.2s ease;
-}
-.btn::after {
-  position: absolute;
-  content: "";
-  top: 0px;
-  left: 100%;
-  bottom: 0px;
-  right: 0px;
-  border: 2px solid #ffffff;
-  border-left: none;
-  border-bottom: none;
-  transition: all 0.2s ease;
-}
-
-.btn:hover::before {
-  left: 5px;
-  bottom: -8px;
-  right: -8px;
-}
-.btn:hover::after {
-  top: 5px;
-  bottom: -8px;
-  right: -8px;
-}
-
-
-
-header {
-  position: relative;
-  min-height: 600px;
-  background: #000000;
-  color: #ffffff;
-}
-header .welcome {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 150px 0;
-}
-header h1 {
-  font-size: 60px;
-  text-transform: uppercase;
-}
-header p {
-  font-size: 20px;
-  font-weight: normal;
-}
-header .buttons {
-  margin-top: 40px;
-}
-header .buttons .btn {
-  margin: 0px 15px;
-}
-
-#cover-tetris {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-}
-
-
-
-section.versus {
-  text-align: center;
-  padding-top: 100px;
-}
-
-section.versus .game {
-  display: inline-block;
-  margin: 0px 20px;
-  width: 200px;
-  height: 500px;
-}
-
-
-section.hipster {
-  text-align: center;
-  padding-top: 100px;
-}
-
-section.hipster .game {
-  display: inline-block;
-  margin: 0px 20px;
-  width: 500px;
-  height: 500px;
-  background: url(images/hipster-bg.jpg) no-repeat 50% 50%;
-  background-size: cover;
-}
-section.hipster .game canvas {
-  opacity: 0.8;
-}
+Backtrace:
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin/compiler.rb:481:in `read'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin/compiler.rb:481:in `update_stylesheet'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin/compiler.rb:215:in `block in update_stylesheets'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin/compiler.rb:209:in `each'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin/compiler.rb:209:in `update_stylesheets'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin/compiler.rb:293:in `watch'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/plugin.rb:108:in `method_missing'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/exec/sass_scss.rb:370:in `watch_or_update'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/exec/sass_scss.rb:50:in `process_result'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/exec/base.rb:52:in `parse'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/lib/sass/exec/base.rb:19:in `parse!'
+C:/Ruby193/lib/ruby/gems/1.9.1/gems/sass-3.4.8/bin/sass:13:in `<top (required)>'
+C:/Ruby193/bin/sass:23:in `load'
+C:/Ruby193/bin/sass:23:in `<main>'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Errno::ENOENT: No such file or directory - styles.scss"; }

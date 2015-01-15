@@ -108,6 +108,31 @@
   </article>
 </section>
 
+
+
+<section id="versus">
+  <header>
+    <h1>Versus</h1>
+  </header>
+
+  <article>
+    <div class="game-holder" id="tetris-versus-1">
+      <div class="score">0</div>
+      <div class="game"></div>
+    </div>
+
+    <div class="vs">vs</div>
+
+    <div class="game-holder" id="tetris-versus-2">
+      <div class="score">0</div>
+      <div class="game"></div>
+    </div>
+  </article>
+
+</section>
+
+
+
 <section id="examples">
   <header>
     <h1>You know you want to</h1>
@@ -164,7 +189,7 @@
 <script src="src/blockrain.jquery.themes.js"></script>
 
 <script>
-  $('#cover-tetris').blockrain({
+  var $cover = $('#cover-tetris').blockrain({
     autoplay: true,
     autoplayRestart: true,
     speed: 100,
@@ -188,6 +213,28 @@
     }
   });
   
+
+  var versusSpeed = 1000;
+
+  var $versus1 = $('#tetris-versus-1 .game').blockrain({
+    autoplay: true,
+    autoplayRestart: true,
+    speed: versusSpeed,
+    onGameOver: function() {
+      var $score = $versus2.parent().find('.score');
+      $score.text( parseInt($score.text()) + 1 );
+    }
+  });
+  var $versus2 = $('#tetris-versus-2 .game').blockrain({
+    autoplay: true,
+    autoplayRestart: true,
+    speed: versusSpeed,
+    onGameOver: function() {
+      var $score = $versus1.parent().find('.score');
+      $score.text( parseInt($score.text()) + 1 );
+    }
+  });
+
 
   var $demo = $('#tetris-demo').blockrain({
     speed: 20,
