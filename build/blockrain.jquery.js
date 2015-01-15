@@ -23,12 +23,14 @@
 
     options: {
       autoplay: false,
-      showFieldOnStart: true,
+      autoplayRestart: true,
+      showFieldOnStart: false,
       theme: null,
       blockWidth: 10,
       autoBlockWidth: false,
       autoBlockSize: 24,
       difficulty: 'normal',
+      speed: 20,
 
       playText: 'Let\'s play some Tetris',
       playButtonText: 'Play',
@@ -758,7 +760,7 @@
 
             game.options.onGameOver(game._filled.score);
 
-            if( game.options.autoplay ) {
+            if( game.options.autoplay && game.options.autoplayRestart ) {
               // On autoplay, restart the game automatically
               game.start();
             }
@@ -767,6 +769,9 @@
               game._board.gameOver = true;
             }
           } else {
+
+            // Update the speed
+            this.animateDelay = 1000 / game.options.speed;
 
             window.setTimeout(function() {
               game._board.animate();
@@ -1137,10 +1142,7 @@
       // Use event namespacing so we don't ruin other keypress events
       $(document).unbind('keypress.blockrain').unbind('keydown.blockrain').unbind('keyup.blockrain');
 
-      if( game.options.autoplay ) {
-
-      }
-      else {
+      if( ! game.options.autoplay ) {
         if( enable ) {
           $(document).bind('keypress.blockrain', keypress).bind('keydown.blockrain', keydown).bind('keyup.blockrain', keyup);
         }
