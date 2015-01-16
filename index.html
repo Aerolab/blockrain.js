@@ -237,7 +237,16 @@
 
   var $demo = $('#tetris-demo').blockrain({
     speed: 20,
-    theme: 'vim'
+    theme: 'vim',
+    onStart: function() {
+      ga( 'send', 'event', 'tetris', 'started');
+    },
+    onLine: function() {
+      ga( 'send', 'event', 'tetris', 'line');
+    },
+    onGameOver: function(score){
+      ga( 'send', 'event', 'tetris', 'over', score);
+    }
   });
 
   $('#example-slider').find('.btn-next').click(function(event){
