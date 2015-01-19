@@ -16,7 +16,8 @@ Create any element (a div, article, figure, whatever you want) and **make sure i
 <div class="game" style="width:250px; height:500px;"></div>
 ```
 
-Then you just include **jquery** and **blockrain** and setup the game with **$('.game').blockrain()**. Adding the CSS file is *strongly recommended*, as it provides
+Then you just include **jquery** and **blockrain** and setup the game with **$('.game').blockrain()**. Adding the CSS file is *strongly recommended*, as it provides some important styles for the UI (but you can customize them as needed).
+
 
 ```html
 <!-- The stylesheet should go in the <head>, or be included in your CSS -->
