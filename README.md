@@ -3,6 +3,11 @@ Blockrain.js
 
 A tetris game in HTML5 + Javascript (with autoplay!)
 
+**[Check out the demo](http://aerolab.github.io/blockrain.js/)**
+
+![Blockrain Screenshot](http://aerolab.github.io/blockrain.js/assets/images/blockrain.png)
+
+
 # Setup
 
 Create any element (a div, article, figure, whatever you want) and **make sure it has a width and a height set via CSS** . You can use any class, but we are using *.game* for this example.
@@ -165,3 +170,15 @@ $game.blockrain('theme', {
 // Return the current score
 var score = $game.blockrain('score');
 ```
+
+
+# Building Blockrain.js
+
+This will generate the full minified source under /build . It's basically License + libs + themes + src, concatenated and minified.
+
+```gulp build```
+
+
+# Credits
+
+Blockrain.js is based on the [work by @mrcoles](http://mrcoles.com/tetris/), which is one of the best HTML5 tetris versions out there. The code was then modified and refactored to build a jQuery Plugin and added quite a few methods to easily add themes to it and make it simpler to implement.

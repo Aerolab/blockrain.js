@@ -1,8 +1,3 @@
-/**
- * BlockRain.js is based on http://mrcoles.com/tetris/
- * I haven't seen it on github, but it's one of the better js Tetris clones out there
- */
-
 ((function ( $ ) {
 
   "use strict";
