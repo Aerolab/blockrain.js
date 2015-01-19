@@ -1,5 +1,5 @@
 {
-  "name": "Blockrain.js",
+  "name": "blockrain",
   "version": "0.1.0",
   "description": "Add a game of tetris to your site",
   "main": "build/blockrain.jquery.min.js",
