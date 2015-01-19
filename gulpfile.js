@@ -19,28 +19,28 @@ gulp.task('js', function () {
     return gulp.src(['./src/blockrain.jquery.libs.js', './src/blockrain.jquery.src.js', './src/blockrain.jquery.themes.js'])
     .pipe(concat('blockrain.jquery.js'))
     .pipe(header(getCopyright(), {version: getVersion()}))
-    .pipe(gulp.dest('./build'))
+    .pipe(gulp.dest('./dist'))
     .pipe(uglify({preserveComments:'none'}))
     .pipe(concat('blockrain.jquery.min.js'))
     .pipe(header(getCopyright(), {version: getVersion()}))
-    .pipe(gulp.dest('./build'));
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('css', function () {
     // CSS
     return gulp.src(['./src/blockrain.css'])
-    .pipe(gulp.dest('./build'));
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('readme', function () {
     // Readme
     return gulp.src(['./README.md'])
-    .pipe(gulp.dest('./build'));
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('dist', function () {
     // Create a ZIP File
-    return gulp.src('./build/*')
+    return gulp.src(['./dist/blockrain.jquery.js', './dist/blockrain.jquery.min.js', './dist/blockrain.css'])
     .pipe(zip('blockrain.zip'))
     .pipe(gulp.dest('./dist'));
 });

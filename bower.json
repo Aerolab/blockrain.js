@@ -2,7 +2,7 @@
   "name": "blockrain",
   "version": "0.1.0",
   "description": "Add a game of tetris to your site",
-  "main": "build/blockrain.jquery.min.js",
+  "main": "dist/blockrain.jquery.min.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/Aerolab/blockrain.js.git"
@@ -20,14 +20,12 @@
   ],
   "ignore": [
     "assets",
-    "dist",
-    "src",
+    "dist/blockrain.zip",
 
     ".gitignore",
     "Copyright",
     "gulpfile.js",
     "index.html",
-    "LICENSE.txt",
     "package.json",
 
     "node_modules",
