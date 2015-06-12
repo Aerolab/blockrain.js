@@ -331,16 +331,16 @@
         }
         // A custom texture
         else if( typeof this._theme.complexBlocks !== 'undefined' && this._theme.complexBlocks !== null ) {
-          
-          var tilesize = color.height;
           if( typeof blockIndex === 'undefined' || blockIndex === null ){ blockIndex = 0; }
+
+          var coords = this._getCustomBlockImageCoordinates(color, blockType, blockIndex);
 
           this._ctx.save();
 
           this._ctx.translate(x, y);
           this._ctx.translate(this._block_size/2, this._block_size/2);
           this._ctx.rotate(Math.PI/2 * blockRotation);
-          this._ctx.drawImage(color,  blockIndex*tilesize, 0, tilesize, tilesize, 
+          this._ctx.drawImage(color,  coords.x, coords.y, coords.w, coords.h, 
                                       -this._block_size/2, -this._block_size/2, this._block_size, this._block_size);
           
           this._ctx.restore();
@@ -393,6 +393,26 @@
 
       // Return the alpha back to 1.0 so we don't create any issues with other drawings.
       this._ctx.globalAlpha = 1.0;
+    },
+
+
+    _getCustomBlockImageCoordinates: function(image, blockType, blockIndex) {
+      // The image is based on the first ("upright") orientation
+      var positions = this._shapeFactory[blockType]().orientations[0];
+      // Find the number of tiles it should have
+      var rangeX = Math.max(positions[0], positions[2], positions[4], positions[6]) - Math.min(positions[0], positions[2], positions[4], positions[6]) + 1;
+      var rangeY = Math.max(positions[1], positions[3], positions[5], positions[7]) - Math.min(positions[1], positions[3], positions[5], positions[7]) + 1;
+      
+      // X and Y sizes should match. Should.
+      var tileSizeX = image.width / rangeX;
+      var tileSizeY = image.height / rangeY;
+
+      return {
+        x: tileSizeX * +positions[blockIndex*2],
+        y: tileSizeY * -positions[blockIndex*2+1],
+        w: tileSizeX,
+        h: tileSizeY
+      };
     },
 
 
