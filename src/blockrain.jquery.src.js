@@ -339,7 +339,7 @@
 
           this._ctx.translate(x, y);
           this._ctx.translate(this._block_size/2, this._block_size/2);
-          this._ctx.rotate(Math.PI/2 * blockRotation);
+          this._ctx.rotate(-Math.PI/2 * blockRotation);
           this._ctx.drawImage(color,  coords.x, coords.y, coords.w, coords.h, 
                                       -this._block_size/2, -this._block_size/2, this._block_size, this._block_size);
           
@@ -400,16 +400,20 @@
       // The image is based on the first ("upright") orientation
       var positions = this._shapeFactory[blockType]().orientations[0];
       // Find the number of tiles it should have
-      var rangeX = Math.max(positions[0], positions[2], positions[4], positions[6]) - Math.min(positions[0], positions[2], positions[4], positions[6]) + 1;
-      var rangeY = Math.max(positions[1], positions[3], positions[5], positions[7]) - Math.min(positions[1], positions[3], positions[5], positions[7]) + 1;
+      var minX = Math.min(positions[0], positions[2], positions[4], positions[6]);
+      var maxX = Math.max(positions[0], positions[2], positions[4], positions[6]);
+      var minY = Math.min(positions[1], positions[3], positions[5], positions[7]);
+      var maxY = Math.max(positions[1], positions[3], positions[5], positions[7]);
+      var rangeX = maxX - minX + 1;
+      var rangeY = maxY - minY + 1;
       
       // X and Y sizes should match. Should.
       var tileSizeX = image.width / rangeX;
       var tileSizeY = image.height / rangeY;
 
       return {
-        x: tileSizeX * +positions[blockIndex*2],
-        y: tileSizeY * -positions[blockIndex*2+1],
+        x: tileSizeX * (positions[blockIndex*2]-minX),
+        y: tileSizeY * Math.abs(minY-positions[blockIndex*2+1]),
         w: tileSizeX,
         h: tileSizeY
       };
@@ -476,7 +480,7 @@
           orientations: orientations,
           orientation: 0, // 4 possible
           rotate: function(right) {
-            var orientation = (this.orientation + (right ? 1 : -1) + 4) % 4;
+            var orientation = (this.orientation + (right ? -1 : 1) + 4) % 4;
 
             //TODO - when past limit - auto shift and remember that too!
             if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
@@ -540,17 +544,18 @@
          * to allow for custom per-block themes.
          */
         line: function() {
-          /*   .   .    
+          /*            
            *   X      
            *   O  XOXX
            *   X      
-           *   X      
+           *   X
+           *   .   .      
            */
           return new Shape(game, [
             [ 0, -1,   0, -2,   0, -3,   0, -4],
-            [-1, -2,   0, -2,   1, -2,   2, -2],
+            [ 2, -2,   1, -2,   0, -2,  -1, -2],
             [ 0, -4,   0, -3,   0, -2,   0, -1],
-            [ 2, -2,   1, -2,   0, -2,  -1, -2]
+            [-1, -2,   0, -2,   1, -2,   2, -2]
           ], false, 'line');
         },
         square: function() {
@@ -560,75 +565,74 @@
            */
           return new Shape(game, [
     		    [0,  0,   1,  0,   0, -1,   1, -1],
-            [0, -1,   0,  0,   1, -1,   1,  0],
+            [1,  0,   1, -1,   0,  0,   0, -1],
             [1, -1,   0, -1,   1,  0,   0,  0],
-            [1,  0,   1, -1,   0,  0,   0, -1]
+            [0, -1,   0,  0,   1, -1,   1,  0]
           ], false, 'square');
         },
         arrow: function() {
           /*
-           *   .   .X  .X  .X
-           *   XOX  OX XOX XO
            *    X   X       X
+           *   XOX XO  XOX  OX
+           *   .   .X  .X  .X
            */
           return new Shape(game, [
             [0, -1,   1, -1,   2, -1,   1, -2],
-            [1, -2,   1, -1,   1,  0,   2, -1],
+            [1,  0,   1, -1,   1, -2,   0, -1],
             [2, -1,   1, -1,   0, -1,   1,  0],
-            [1,  0,   1, -1,   1, -2,   0, -1]
+            [1, -2,   1, -1,   1,  0,   2, -1]
           ], false, 'arrow');
         },
         rightHook: function() {
           /*
-           *   X    .X   .   .XX
-           *   XOX   O   XOX  O
-           *        XX     X  X
+           *    X    X XX 
+           *    O  XOX  O XOX 
+           *   .XX .   .X X   
            */
           return new Shape(game, [
-            [0,  0,   0, -1,   1, -1,   2, -1],
-            [0, -2,   1, -2,   1, -1,   1,  0],
+            [2,  0,   1,  0,   1, -1,   1, -2],
             [2, -2,   2, -1,   1, -1,   0, -1],
-            [1,  0,   0,  0,   0, -1,   0, -2]
+            [0, -2,   1, -2,   1, -1,   1,  0],
+            [0,  0,   0, -1,   1, -1,   2, -1]
           ], false, 'rightHook');
         },
         leftHook: function() {
           /*
-           *   . X XX  .   X
-           *   XOX  O  XOX O
-           *        X  X   XX
+           *    X      XX X  
+           *    O XOX  O  XOX
+           *   XX . X .X  .  
            */
           return new Shape(game, [
-            [2,  0,   2, -1,   1, -1,   0, -1],
             [0,  0,   1,  0,   1, -1,   1, -2],
-            [0, -2,   0, -1,   1, -1,   2, -1],
-            [1, -2,   0, -2,   0, -1,   0,  0]
+            [2,  0,   2, -1,   1, -1,   0, -1],
+            [2, -2,   1, -2,   1, -1,   1,  0],
+            [0, -2,   0, -1,   1, -1,   2, -1]
           ], false, 'leftHook');
         },
         leftZag: function() {
           /*
-           *   X   .XX 
-           *   XO  XO
-           *    X  
+           *    X  XX 
+           *   XO   OX
+           *   X   .  
            */
           return new Shape(game, [
           	[0,  0,   0, -1,   1, -1,   1, -2],
-          	[0, -1,   1, -1,   1,  0,   2,  0],
+          	[2, -1,   1, -1,   1, -2,   0, -2],
           	[1, -2,   1, -1,   0, -1,   0,  0],
-          	[2,  0,   1,  0,   1, -1,   0, -1]
+          	[0, -2,   1, -2,   1, -1,   2, -1]
           ], false, 'leftZag');
         },
         rightZag: function() {
           /*
-           *   .X  XX
+           *   X    
            *   XO   OX
-           *   X     
+           *   .X  XX   
            */
           return new Shape(game, [
             [1,  0,   1, -1,   0, -1,   0, -2],
-            [0,  0,   1,  0,   1, -1,   2, -1],
-
+            [2, -1,   1, -1,   1,  0,   0,  0],
             [0, -2,   0, -1,   1, -1,   1,  0],
-            [2, -1,   1, -1,   1,  0,   0,  0]
+            [0,  0,   1,  0,   1, -1,   2, -1]
           ], false, 'rightZag');
         }
       };
@@ -856,6 +860,7 @@
             game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
             game._drawBackground();
             game._filled.draw();
+            console.log(this.cur.blockType);
             this.cur.draw(drop);
           }
 
