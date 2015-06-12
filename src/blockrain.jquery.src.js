@@ -326,12 +326,12 @@
         if( color.width === 0 || color.height === 0 ){ return; }
 
         // A square is the same style for all blocks
-        if( color.width === color.height ) {
+        if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
           this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
         }
         // A custom texture
-        else if ( color.width === color.height * 4 ) {
-          // Uses a long tile (4 subtiles)
+        else if( typeof this._theme.complexBlocks !== 'undefined' && this._theme.complexBlocks !== null ) {
+          
           var tilesize = color.height;
           if( typeof blockIndex === 'undefined' || blockIndex === null ){ blockIndex = 0; }
 
@@ -409,14 +409,18 @@
       if( falling ) {
         if( typeof this._theme.primary === 'string' && this._theme.primary !== '' ) {
           return this._theme.primary;
-        } else {
+        } else if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
           return this._theme.blocks[blockName];
+        } else {
+          return this._theme.complexBlocks[blockName];
         }
       } else {
         if( typeof this._theme.secondary === 'string' && this._theme.secondary !== '' ) {
           return this._theme.secondary;
-        } else {
+        } else if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
           return this._theme.blocks[blockName];
+        } else {
+          return this._theme.complexBlocks[blockName];
         }
       }
     },
@@ -914,7 +918,7 @@
      */
     _preloadThemeAssets: function() {
 
-      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
+      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');
 
       if( typeof this._theme.blocks !== 'undefined' ){
         var keys = Object.keys(this._theme.blocks);
@@ -927,6 +931,22 @@
               var base64src = this._theme.blocks[ keys[i] ];
               this._theme.blocks[ keys[i] ] = new Image();
               this._theme.blocks[ keys[i] ].src = base64src;
+            }
+          }
+        }
+      }
+
+      if( typeof this._theme.complexBlocks !== 'undefined' ){
+        var keys = Object.keys(this._theme.complexBlocks);
+
+        // Load the complexBlocks
+        for( var i = 0; i < keys.length; i++ ) {
+          this._theme.complexBlocks[ keys[i] ]
+          if( typeof this._theme.complexBlocks[ keys[i] ] === 'string' ) {
+            if( base64check.test( this._theme.complexBlocks[ keys[i] ] ) ) {
+              var base64src = this._theme.complexBlocks[ keys[i] ];
+              this._theme.complexBlocks[ keys[i] ] = new Image();
+              this._theme.complexBlocks[ keys[i] ].src = base64src;
             }
           }
         }
