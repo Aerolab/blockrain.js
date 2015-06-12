@@ -622,9 +622,9 @@
         check: function(x, y) {
           return this.data[this.asIndex(x, y)];
         },
-        add: function(x, y, blockType) {
+        add: function(x, y, blockType, blockIndex, blockOrientation) {
           if (x >= 0 && x < game._BLOCK_WIDTH && y >= 0 && y < game._BLOCK_HEIGHT) {
-            this.data[this.asIndex(x, y)] = blockType;
+            this.data[this.asIndex(x, y)] = {blockType: blockType, blockIndex: blockIndex, blockOrientation: blockOrientation};
           }
         },
         asIndex: function(x, y) {
@@ -652,7 +652,7 @@
           for (i=0, len=this.data.length; i<len; i++) {
             mod = this.asX(i);
             if (mod == 0) count = 0;
-            if (this.data[i] && typeof this.data[i] == 'string') {
+            if (this.data[i] && typeof this.data[i] !== 'undefined' && typeof this.data[i].blockType === 'string') {
               count += 1;
             }
             if (mod == game._BLOCK_WIDTH - 1 && count == game._BLOCK_WIDTH) {
@@ -689,8 +689,8 @@
           for (var i=0, len=this.data.length, row, color; i<len; i++) {
             if (this.data[i] !== undefined) {
               row = this.asY(i);
-              var blockType = this.data[i];
-              game._drawBlock(this.asX(i), row, blockType);
+              var block = this.data[i];
+              game._drawBlock(this.asX(i), row, block.blockType, block.blockIndex, block.blockOrientation);
             }
           }
         }
@@ -815,11 +815,13 @@
               var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
               if (game._checkCollisions(x, y+1, blocks, true)) {
                 drop = false;
+                var blockIndex = 0;
                 for (var i=0; i<cur.blocksLen; i+=2) {
-                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
+                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType, blockIndex, cur.orientation);
                   if (y + blocks[i] < 0) {
                     gameOver = true;
                   }
+                  blockIndex++;
                 }
                 game._filled.checkForClears();
                 this.cur = this.nextShape();
@@ -867,7 +869,8 @@
             for (j=0, jlen=game._randChoice([game._randInt(0, 8), game._randInt(5, 9)]); j<jlen; j++) {
               if (!color || !game._randInt(0, 3)) color = game._randChoice(blockTypes);
 
-              game._filled.add(i, game._BLOCK_HEIGHT - j, color);
+              // Use a random piece and orientation
+              game._filled.add(i, game._BLOCK_HEIGHT - j, color, game._randInt(0,3), game._randInt(0,3));
             }
           }
 
