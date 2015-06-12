@@ -265,9 +265,9 @@
             var cx = x * this._block_size;
             var cy = y * this._block_size;
 
-            this._ctx.drawImage( this._theme.backgroundGrid, 
-                            0, 0, this._theme.backgroundGrid.width, this._theme.backgroundGrid.height, 
-                            cx, cy, this._block_size, this._block_size);
+            this._ctx.drawImage(  this._theme.backgroundGrid, 
+                                  0, 0, this._theme.backgroundGrid.width, this._theme.backgroundGrid.height, 
+                                  cx, cy, this._block_size, this._block_size);
           }
         }
 
@@ -302,7 +302,7 @@
      * The blockType is used to draw any block. 
      * The falling attribute is needed to apply different styles for falling and placed blocks.
      */
-    _drawBlock: function(x, y, blockType, falling) {
+    _drawBlock: function(x, y, blockType, blockIndex, blockRotation, falling) {
 
       // convert x and y to pixel
       x = x * this._block_size;
@@ -313,7 +313,7 @@
       var borderDistance = Math.round(this._block_size*0.23);
       var squareDistance = Math.round(this._block_size*0.30);
 
-      var color = this._getBlockColor(blockType, falling);
+      var color = this._getBlockColor(blockType, blockIndex, falling);
 
       // Draw the main square
       this._ctx.globalAlpha = 1.0;
@@ -325,7 +325,17 @@
         // Not loaded
         if( color.width === 0 || color.height === 0 ){ return; }
 
-        this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
+        //this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
+        // Uses a long tile (4 subtiles)
+        var tilesize = color.height;
+        this._ctx.save();
+
+        this._ctx.translate(x, y);
+        this._ctx.rotate(Math.PI/2 * blockRotation);
+        this._ctx.drawImage(color,  blockIndex*tilesize, 0, tilesize, tilesize, 
+                                    0, 0, this._block_size, this._block_size);
+        
+        this._ctx.restore();
 
       }
       else if( typeof color === 'string' )
@@ -373,7 +383,7 @@
     },
 
 
-    _getBlockColor: function(blockName, falling) {
+    _getBlockColor: function(blockName, blockIndex, falling) {
       /**
        * The theme allows us to do many things:
        * - Use a specific color for the falling block (primary), regardless of the proper color.
@@ -423,6 +433,7 @@
             });
             return this;
           },
+
           blockType: blockType,
           blocksLen: orientations[0].length,
           orientations: orientations,
@@ -454,10 +465,12 @@
             var blocks = this.getBlocks(_orientation),
                 x = _x === undefined ? this.x : _x,
                 y = _y === undefined ? this.y : _y,
-                i = 0;
+                i = 0,
+                index = 0;
 
             for (; i<this.blocksLen; i += 2) {
-              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, true);
+              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, index, this.orientation, true);
+              index++;
             }
           },
           getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
