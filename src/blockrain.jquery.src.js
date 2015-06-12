@@ -325,18 +325,31 @@
         // Not loaded
         if( color.width === 0 || color.height === 0 ){ return; }
 
-        //this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
-        // Uses a long tile (4 subtiles)
-        var tilesize = color.height;
-        this._ctx.save();
+        // A square is the same style for all blocks
+        if( color.width === color.height ) {
+          this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
+        }
+        // A custom texture
+        else if ( color.width === color.height * 4 ) {
+          // Uses a long tile (4 subtiles)
+          var tilesize = color.height;
+          if( typeof blockIndex === 'undefined' || blockIndex === null ){ blockIndex = 0; }
 
-        this._ctx.translate(x, y);
-        this._ctx.rotate(Math.PI/2 * blockRotation);
-        this._ctx.drawImage(color,  blockIndex*tilesize, 0, tilesize, tilesize, 
-                                    0, 0, this._block_size, this._block_size);
-        
-        this._ctx.restore();
+          this._ctx.save();
 
+          this._ctx.translate(x, y);
+          this._ctx.translate(this._block_size/2, this._block_size/2);
+          this._ctx.rotate(Math.PI/2 * blockRotation);
+          this._ctx.drawImage(color,  blockIndex*tilesize, 0, tilesize, tilesize, 
+                                      -this._block_size/2, -this._block_size/2, this._block_size, this._block_size);
+          
+          this._ctx.restore();
+
+        } else {
+          // ERROR
+          this._ctx.fillStyle = '#ff0000';
+          this._ctx.fillRect(x, y, this._block_size, this._block_size);
+        }
       }
       else if( typeof color === 'string' )
       {
@@ -497,6 +510,11 @@
       };
 
       this._shapeFactory = {
+        /**
+         * The shapes have a reference point (the dot) and always rotate left.
+         * Keep in mind that the blocks should keep in the same relative position when rotating,
+         * to allow for custom per-block themes.
+         */
         line: function() {
           /*   .   .    
            *   X      
@@ -504,17 +522,24 @@
            *   X      
            *   X      
            */
-          var ver = [ 0, -1,   0, -2,   0, -3,   0, -4],
-              hor = [-1, -2,   0, -2,   1, -2,   2, -2];
-          return new Shape(game, [ver, hor, ver, hor], true, 'line');
+          return new Shape(game, [
+            [ 0, -1,   0, -2,   0, -3,   0, -4],
+            [-1, -2,   0, -2,   1, -2,   2, -2],
+            [ 0, -4,   0, -3,   0, -2,   0, -1],
+            [ 2, -2,   1, -2,   0, -2,  -1, -2]
+          ], false, 'line');
         },
         square: function() {
           /*
            *  XX
            *  XX
            */
-          var s = [0, 0, 1, 0, 0, -1, 1, -1];
-          return new Shape(game, [s, s, s, s], true, 'square');
+          return new Shape(game, [
+    		    [0,  0,   1,  0,   0, -1,   1, -1],
+            [0, -1,   0,  0,   1, -1,   1,  0],
+            [1, -1,   0, -1,   1,  0,   0,  0],
+            [1,  0,   1, -1,   0,  0,   0, -1]
+          ], false, 'square');
         },
         arrow: function() {
           /*
@@ -525,34 +550,34 @@
           return new Shape(game, [
             [0, -1,   1, -1,   2, -1,   1, -2],
             [1, -2,   1, -1,   1,  0,   2, -1],
-            [2, -1,   1, -1,   1,  0,   0, -1],
+            [2, -1,   1, -1,   0, -1,   1,  0],
             [1,  0,   1, -1,   1, -2,   0, -1]
           ], false, 'arrow');
         },
         rightHook: function() {
           /*
-           *   X    .X  .   .XX
-           *   XOX   O  XOX  O
-           *        XX    X  X
+           *   X    .X   .   .XX
+           *   XOX   O   XOX  O
+           *        XX     X  X
            */
           return new Shape(game, [
             [0,  0,   0, -1,   1, -1,   2, -1],
             [0, -2,   1, -2,   1, -1,   1,  0],
             [2, -2,   2, -1,   1, -1,   0, -1],
-            [2,  0,   1,  0,   1, -1,   1, -2]
+            [1,  0,   0,  0,   0, -1,   0, -2]
           ], false, 'rightHook');
         },
         leftHook: function() {
           /*
-           *   .   .XX X   .X
-           *   XOX  O  XOX  O
-           *     X  X      XX
+           *   . X XX  .   X
+           *   XOX  O  XOX O
+           *        X  X   XX
            */
           return new Shape(game, [
-            [2, -2,   2, -1,   1, -1,   0, -1],
-            [0,  2,   0,  1,   1, -1,   1, -2],
-            [0,  0,   0, -1,   1, -1,   2, -1],
-            [0, -2,   1, -2,   1, -1,   1,  0]
+            [2,  0,   2, -1,   1, -1,   0, -1],
+            [0,  0,   1,  0,   1, -1,   1, -2],
+            [0, -2,   0, -1,   1, -1,   2, -1],
+            [1, -2,   0, -2,   0, -1,   0,  0]
           ], false, 'leftHook');
         },
         leftZag: function() {
@@ -561,9 +586,12 @@
            *   XO  XO
            *    X  
            */
-          var ver = [0,  0,   0, -1,   1, -1,   1, -2],
-              hor = [0, -1,   1, -1,   1,  0,   2,  0];
-          return new Shape(game, [hor, ver, hor, ver], true, 'leftZag');
+          return new Shape(game, [
+          	[0,  0,   0, -1,   1, -1,   1, -2],
+          	[0, -1,   1, -1,   1,  0,   2,  0],
+          	[1, -2,   1, -1,   0, -1,   0,  0],
+          	[2,  0,   1,  0,   1, -1,   0, -1]
+          ], false, 'leftZag');
         },
         rightZag: function() {
           /*
@@ -571,9 +599,13 @@
            *   XO   OX
            *   X     
            */
-          var ver = [1,  0,   1, -1,   0, -1,   0, -2],
-              hor = [0,  0,   1,  0,   1, -1,   2, -1];
-          return new Shape(game, [hor, ver, hor, ver], true, 'rightZag');
+          return new Shape(game, [
+            [1,  0,   1, -1,   0, -1,   0, -2],
+            [0,  0,   1,  0,   1, -1,   2, -1],
+
+            [0, -2,   0, -1,   1, -1,   1,  0],
+            [2, -1,   1, -1,   1,  0,   0,  0]
+          ], false, 'rightZag');
         }
       };
     },
