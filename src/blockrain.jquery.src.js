@@ -452,9 +452,9 @@
             if (drop) { this.y++; }
 
             var blocks = this.getBlocks(_orientation),
-              x = _x === undefined ? this.x : _x,
-              y = _y === undefined ? this.y : _y,
-              i = 0;
+                x = _x === undefined ? this.x : _x,
+                y = _y === undefined ? this.y : _y,
+                i = 0;
 
             for (; i<this.blocksLen; i += 2) {
               game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, true);
@@ -462,7 +462,7 @@
           },
           getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
             var blocks = $.isArray(_blocks) ? _blocks : this.getBlocks(_blocks),
-              i=0, len=blocks.length, minx=999, maxx=-999, miny=999, maxy=-999;
+                i=0, len=blocks.length, minx=999, maxx=-999, miny=999, maxy=-999;
             for (; i<len; i+=2) {
               if (blocks[i] < minx) { minx = blocks[i]; }
               if (blocks[i] > maxx) { maxx = blocks[i]; }
@@ -485,14 +485,14 @@
 
       this._shapeFactory = {
         line: function() {
-          /*
-           *   X        X
-           *   O  XOXX  O XOXX
-           *   X        X
-           *   X        X
+          /*   .   .    
+           *   X      
+           *   O  XOXX
+           *   X      
+           *   X      
            */
-          var ver = [0, -1, 0, -2, 0, -3, 0, -4],
-          hor = [-1, -2, 0, -2, 1, -2, 2, -2];
+          var ver = [ 0, -1,   0, -2,   0, -3,   0, -4],
+              hor = [-1, -2,   0, -2,   1, -2,   2, -2];
           return new Shape(game, [ver, hor, ver, hor], true, 'line');
         },
         square: function() {
@@ -505,61 +505,61 @@
         },
         arrow: function() {
           /*
-           *    X   X       X
+           *   .   .X  .X  .X
            *   XOX  OX XOX XO
-           *        X   X   X
+           *    X   X       X
            */
           return new Shape(game, [
-            [0, -1, 1, -1, 2, -1, 1, -2],
-            [1, -2, 1, -1, 1, 0, 2, -1],
-            [0, -1, 1, -1, 2, -1, 1, 0],
-            [0, -1, 1, -1, 1, -2, 1, 0]
+            [0, -1,   1, -1,   2, -1,   1, -2],
+            [1, -2,   1, -1,   1,  0,   2, -1],
+            [2, -1,   1, -1,   1,  0,   0, -1],
+            [1,  0,   1, -1,   1, -2,   0, -1]
           ], false, 'arrow');
         },
         rightHook: function() {
           /*
-           *       XX   X X
-           *   XOX  O XOX O
-           *   X    X     XX
+           *   X    .X  .   .XX
+           *   XOX   O  XOX  O
+           *        XX    X  X
            */
           return new Shape(game, [
-            [0, 0, 0, -1, 1, -1, 2, -1],
-            [0, -2, 1, 0, 1, -1, 1, -2],
-            [0, -1, 1, -1, 2, -1, 2, -2],
-            [0, -2, 0, -1, 0, 0, 1, 0]
+            [0,  0,   0, -1,   1, -1,   2, -1],
+            [0, -2,   1, -2,   1, -1,   1,  0],
+            [2, -2,   2, -1,   1, -1,   0, -1],
+            [2,  0,   1,  0,   1, -1,   1, -2]
           ], false, 'rightHook');
         },
         leftHook: function() {
           /*
-           *        X X   XX
-           *   XOX  O XOX O
-           *     X XX     X
+           *   .   .XX X   .X
+           *   XOX  O  XOX  O
+           *     X  X      XX
            */
           return new Shape(game, [
-            [2, 0, 0, -1, 1, -1, 2, -1],
-            [0, 0, 1, 0, 1, -1, 1, -2],
-            [0, -2, 0, -1, 1, -1, 2, -1],
-            [0, 0, 0, -1, 0, -2, 1, -2]
+            [2, -2,   2, -1,   1, -1,   0, -1],
+            [0,  2,   0,  1,   1, -1,   1, -2],
+            [0,  0,   0, -1,   1, -1,   2, -1],
+            [0, -2,   1, -2,   1, -1,   1,  0]
           ], false, 'leftHook');
         },
         leftZag: function() {
           /*
-           *        X
-           *   XO  OX
-           *    XX X
+           *   X   .XX 
+           *   XO  XO
+           *    X  
            */
-          var ver = [0, 0, 0, -1, 1, -1, 1, -2],
-              hor = [0, -1, 1, -1, 1, 0, 2, 0];
+          var ver = [0,  0,   0, -1,   1, -1,   1, -2],
+              hor = [0, -1,   1, -1,   1,  0,   2,  0];
           return new Shape(game, [hor, ver, hor, ver], true, 'leftZag');
         },
         rightZag: function() {
           /*
-           *       X
-           *    OX OX
-           *   XX   X
+           *   .X  XX
+           *   XO   OX
+           *   X     
            */
-          var ver = [0, -2, 0, -1, 1, -1, 1, 0],
-              hor = [0, 0, 1, 0, 1, -1, 2, -1];
+          var ver = [1,  0,   1, -1,   0, -1,   0, -2],
+              hor = [0,  0,   1,  0,   1, -1,   2, -1];
           return new Shape(game, [hor, ver, hor, ver], true, 'rightZag');
         }
       };
