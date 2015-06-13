@@ -213,6 +213,13 @@
       this._info.init();
       this._board.init();
 
+      var renderLoop = function(){
+        requestAnimationFrame(renderLoop);
+        game._board.render();
+        console.log("render");
+      };
+      renderLoop();
+
       if( this.options.autoplay ) {
         this.autoplay(true);
       } else {
@@ -220,7 +227,6 @@
       }
 
     },
-
 
     _checkCollisions: function(x, y, blocks, checkDownOnly) {
       // x & y should be aspirational values
@@ -500,9 +506,7 @@
           getBlocks: function(orientation) { // optional param
             return this.orientations[orientation !== undefined ? orientation : this.orientation];
           },
-          draw: function(drop, _x, _y, _orientation) {
-            if (drop) { this.y++; }
-
+          draw: function(_x, _y, _orientation) {
             var blocks = this.getBlocks(_orientation),
                 x = _x === undefined ? this.x : _x,
                 y = _y === undefined ? this.y : _y,
@@ -755,7 +759,9 @@
     _SetupBoard: function() {
 
       var game = this;
-      var info = this._info
+      var info = this._info;
+
+      var animateTimeoutId = null;
 
       this._board = {
         animateDelay: 1000 / game.options.speed,
@@ -780,14 +786,16 @@
           }
 
           this.showStartMessage();
-
         },
+
         showStartMessage: function() {
           game._$start.show();
         },
+
         showGameOverMessage: function() {
           game._$gameover.show();
         },
+
         nextShape: function(_set_next_only) {
           var next = this.next,
             func, shape, result;
@@ -824,9 +832,12 @@
 
           return result;
         },
+
         animate: function() {
           var drop = false,
-            gameOver = false;
+              gameOver = false;
+
+          if( animateTimeoutId ){ clearTimeout(animateTimeoutId); }
 
           //game.updateSizes();
 
@@ -855,14 +866,9 @@
                 this.cur = this.nextShape();
               }
             }
-
-            // Draw the blockrain field
-            game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
-            game._drawBackground();
-            game._filled.draw();
-            console.log(this.cur.blockType);
-            this.cur.draw(drop);
           }
+
+          if (drop) { this.cur.y++; }
 
           if( gameOver ) {
 
@@ -880,13 +886,14 @@
             // Update the speed
             this.animateDelay = 1000 / game.options.speed;
 
-            window.setTimeout(function() {
+            animateTimeoutId = window.setTimeout(function() {
               game._board.animate();
             }, this.animateDelay);
 
           }
 
         },
+
         createRandomBoard: function() {
 
           var start = [], blockTypes = [], i, ilen, j, jlen, color;
@@ -925,7 +932,7 @@
           game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
           game._drawBackground();
           game._filled.draw();
-          this.cur.draw(false);
+          this.cur.draw();
         }
       };
 
