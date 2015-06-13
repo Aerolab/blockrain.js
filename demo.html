@@ -39,9 +39,11 @@
 
 
 <section id="examples">
+
   <header>
     <h1>Try it yourself!</h1>
   </header>
+
   <article id="example-slider">
     <div class="example">
       <div class="game" id="tetris-demo"></div>
@@ -58,8 +60,9 @@
 <script>
 
   var $demo = $('#tetris-demo').blockrain({
-    speed: 30,
+    speed: 10,
     theme: 'individual',
+    autoplay: false,
     onStart: function() {
       
     },
@@ -70,6 +73,8 @@
       
     }
   });
+
+  $demo.blockrain('touchControls', true);
 
 </script>
 

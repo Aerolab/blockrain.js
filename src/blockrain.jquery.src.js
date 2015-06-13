@@ -83,11 +83,17 @@
         this._doStart();
       }
       this._setupControls( ! enable );
+      this._setupTouchControls( ! enable );
     },
 
     controls: function(enable) {
       if( typeof enable !== 'boolean' ){ enable = true; }
       this._setupControls(enable);
+    },
+
+    touchControls: function(enable) {
+      if( typeof enable !== 'boolean' ){ enable = true; }
+      this._setupTouchControls(enable);
     },
 
     score: function(newScore) {
@@ -216,7 +222,6 @@
       var renderLoop = function(){
         requestAnimationFrame(renderLoop);
         game._board.render();
-        console.log("render");
       };
       renderLoop();
 
@@ -501,6 +506,11 @@
           moveLeft: function() {
             if (!game._checkCollisions(this.x - 1, this.y, this.getBlocks())) {
               this.x--;
+            }
+          },
+          drop: function() {
+            if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
+              this.y++;
             }
           },
           getBlocks: function(orientation) { // optional param
@@ -1063,6 +1073,20 @@
       });
       game._$gameholder.append(game._$gameover);
 
+      this._createControls();
+    },
+
+
+    _createControls: function() {
+
+      var game = this;
+
+      game._$touchLeft = $('<a class="blockrain-touch blockrain-touch-left" />').appendTo(game._$gameholder);
+      game._$touchRight = $('<a class="blockrain-touch blockrain-touch-right" />').appendTo(game._$gameholder);
+      game._$touchRotateRight = $('<a class="blockrain-touch blockrain-touch-rotate-right" />').appendTo(game._$gameholder);
+      game._$touchRotateLeft = $('<a class="blockrain-touch blockrain-touch-rotate-left" />').appendTo(game._$gameholder);
+      game._$touchDrop = $('<a class="blockrain-touch blockrain-touch-drop" />').appendTo(game._$gameholder);
+
     },
 
 
@@ -1224,10 +1248,10 @@
           caught = true;
           if (game.options.asdwKeys) {
             switch(evt.keyCode) {
-              case 65: /*a*/   game._board.cur.moveLeft(); break;
-              case 87: /*w*/     game._board.cur.rotate(true); break;
-              case 68: /*d*/  game._board.cur.moveRight(); break;
-              case 83: /*s*/   game._board.dropCount = game._board.dropDelay; break;
+              case 65: /*a*/    game._board.cur.moveLeft(); break;
+              case 87: /*w*/    game._board.cur.rotate(true); break;
+              case 68: /*d*/    game._board.cur.moveRight(); break;
+              case 83: /*s*/    game._board.dropCount = game._board.dropDelay; break;
             }
           }
           switch(evt.keyCode) {
@@ -1277,11 +1301,65 @@
 
       // Unbind everything by default
       // Use event namespacing so we don't ruin other keypress events
-      $(document).unbind('keypress.blockrain').unbind('keydown.blockrain').unbind('keyup.blockrain');
+      $(document) .unbind('keypress.blockrain')
+                  .unbind('keydown.blockrain')
+                  .unbind('keyup.blockrain');
 
       if( ! game.options.autoplay ) {
         if( enable ) {
-          $(document).bind('keypress.blockrain', keypress).bind('keydown.blockrain', keydown).bind('keyup.blockrain', keyup);
+          $(document) .bind('keypress.blockrain', keypress)
+                      .bind('keydown.blockrain', keydown)
+                      .bind('keyup.blockrain', keyup);
+        }
+      }
+    },
+
+
+    _setupTouchControls: function(enable) {
+
+      var game = this;
+
+      var moveLeft = function(event){
+        event.preventDefault();
+        game._board.cur.moveLeft();
+      };
+      var moveRight = function(event){
+        event.preventDefault();
+        game._board.cur.moveRight();
+      };
+      var drop = function(event){
+        event.preventDefault();
+        game._board.dropCount = game._board.dropDelay;
+      };
+      var rotateLeft = function(event){
+        event.preventDefault();
+        game._board.cur.rotate(false);
+      };
+      var rotateRight = function(event){
+        event.preventDefault();
+        game._board.cur.rotate(true);
+      };
+
+      // Unbind everything by default
+      game._$touchLeft.unbind('mousedown');
+      game._$touchRight.unbind('mousedown');
+      game._$touchRotateLeft.unbind('mousedown');
+      game._$touchRotateRight.unbind('mousedown');
+      game._$touchDrop.unbind('mousedown');
+
+      if( ! game.options.autoplay ) {
+        if( enable ) {
+          game._$touchLeft.show().bind('mousedown', moveLeft);
+          game._$touchRight.show().bind('mousedown', moveRight);
+          game._$touchRotateLeft.show().bind('mousedown', rotateLeft);
+          game._$touchRotateRight.show().bind('mousedown', rotateRight);
+          game._$touchDrop.show().bind('mousedown', drop);
+        } else {
+          game._$touchLeft.hide();
+          game._$touchRight.hide();
+          game._$touchRotateLeft.hide();
+          game._$touchRotateRight.hide();
+          game._$touchDrop.hide();
         }
       }
     }
