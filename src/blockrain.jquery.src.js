@@ -227,8 +227,10 @@
 
       if( this.options.autoplay ) {
         this.autoplay(true);
+        this._setupTouchControls(false);
       } else {
         this._setupControls(true);
+        this._setupTouchControls(false);
       }
 
     },
@@ -1341,19 +1343,19 @@
       };
 
       // Unbind everything by default
-      game._$touchLeft.unbind('mousedown');
-      game._$touchRight.unbind('mousedown');
-      game._$touchRotateLeft.unbind('mousedown');
-      game._$touchRotateRight.unbind('mousedown');
-      game._$touchDrop.unbind('mousedown');
+      game._$touchLeft.unbind('touchstart');
+      game._$touchRight.unbind('touchstart');
+      game._$touchRotateLeft.unbind('touchstart');
+      game._$touchRotateRight.unbind('touchstart');
+      game._$touchDrop.unbind('touchstart');
 
       if( ! game.options.autoplay ) {
         if( enable ) {
-          game._$touchLeft.show().bind('mousedown', moveLeft);
-          game._$touchRight.show().bind('mousedown', moveRight);
-          game._$touchRotateLeft.show().bind('mousedown', rotateLeft);
-          game._$touchRotateRight.show().bind('mousedown', rotateRight);
-          game._$touchDrop.show().bind('mousedown', drop);
+          game._$touchLeft.show().bind('touchstart', moveLeft);
+          game._$touchRight.show().bind('touchstart', moveRight);
+          game._$touchRotateLeft.show().bind('touchstart', rotateLeft);
+          game._$touchRotateRight.show().bind('touchstart', rotateRight);
+          game._$touchDrop.show().bind('touchstart', drop);
         } else {
           game._$touchLeft.hide();
           game._$touchRight.hide();
