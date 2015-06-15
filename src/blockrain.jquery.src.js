@@ -58,6 +58,7 @@
       this._board.cur = this._board.nextShape();
       this._board.started = true;
       this._board.gameover = false;
+      this._board.render(true);
       this._board.animate();
 
       this._$start.fadeOut(150);
@@ -102,6 +103,10 @@
         this._$scoreText.text(this._filled_score);
       }
       return this._filled.score;
+    },
+
+    freesquares: function() {
+      return this._filled.getFreeSpaces();
     },
 
     showStartMessage: function() {
@@ -498,21 +503,25 @@
             //TODO - when past limit - auto shift and remember that too!
             if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
               this.orientation = orientation;
+              game._board.renderChanged = true;
             }
           },
           moveRight: function() {
             if (!game._checkCollisions(this.x + 1, this.y, this.getBlocks())) {
               this.x++;
+              game._board.renderChanged = true;
             }
           },
           moveLeft: function() {
             if (!game._checkCollisions(this.x - 1, this.y, this.getBlocks())) {
               this.x--;
+              game._board.renderChanged = true;
             }
           },
           drop: function() {
             if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
               this.y++;
+              game._board.renderChanged = true;
             }
           },
           getBlocks: function(orientation) { // optional param
@@ -671,6 +680,12 @@
             this.data[this.asIndex(x, y)] = {blockType: blockType, blockIndex: blockIndex, blockOrientation: blockOrientation};
           }
         },
+        getFreeSpaces: function() {
+          var count = 0;
+          for( var i=0; i<this.data.length; i++ ) {
+            count += (this.data[i] ? 1 : 0);
+          }
+        },
         asIndex: function(x, y) {
           return x + y*game._BLOCK_WIDTH;
         },
@@ -773,10 +788,9 @@
       var game = this;
       var info = this._info;
 
-      var animateTimeoutId = null;
-
       this._board = {
         animateDelay: 1000 / game.options.speed,
+        animateTimeoutId: null,
         cur: null,
 
         lines: 0,
@@ -784,9 +798,10 @@
         dropCount: 0,
         dropDelay: 5, //5,
 
-
         started: false,
         gameover: false,
+
+        renderChanged: true,
 
         init: function() {
           this.cur = this.nextShape();
@@ -849,7 +864,7 @@
           var drop = false,
               gameOver = false;
 
-          if( animateTimeoutId ){ clearTimeout(animateTimeoutId); }
+          if( this.animateTimeoutId ){ clearTimeout(this.animateTimeoutId); }
 
           //game.updateSizes();
 
@@ -876,11 +891,15 @@
                 }
                 game._filled.checkForClears();
                 this.cur = this.nextShape();
+                this.renderChanged = true;
               }
             }
           }
 
-          if (drop) { this.cur.y++; }
+          if (drop) {
+            this.cur.y++;
+            this.renderChanged = true;
+          }
 
           if( gameOver ) {
 
@@ -892,13 +911,14 @@
               // On autoplay, restart the game automatically
               game.restart();
             }
+            this.renderChanged = true;
 
           } else {
 
             // Update the speed
             this.animateDelay = 1000 / game.options.speed;
 
-            animateTimeoutId = window.setTimeout(function() {
+            this.animateTimeoutId = window.setTimeout(function() {
               game._board.animate();
             }, this.animateDelay);
 
@@ -938,13 +958,18 @@
           }
           */
 
+          game._board.render(true);
+
         },
 
-        render: function() {
-          game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
-          game._drawBackground();
-          game._filled.draw();
-          this.cur.draw();
+        render: function(forceRender) {
+          if( this.renderChanged || forceRender ) {
+            this.renderChanged = false;
+            game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
+            game._drawBackground();
+            game._filled.draw();
+            this.cur.draw();
+          }
         }
       };
 
@@ -962,23 +987,16 @@
      */
     _preloadThemeAssets: function() {
 
-      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');
+      var game = this;
 
-      if( typeof this._theme.blocks !== 'undefined' ){
-        var keys = Object.keys(this._theme.blocks);
-
-        // Load the blocks
-        for( var i = 0; i < keys.length; i++ ) {
-          this._theme.blocks[ keys[i] ]
-          if( typeof this._theme.blocks[ keys[i] ] === 'string' ) {
-            if( base64check.test( this._theme.blocks[ keys[i] ] ) ) {
-              var base64src = this._theme.blocks[ keys[i] ];
-              this._theme.blocks[ keys[i] ] = new Image();
-              this._theme.blocks[ keys[i] ].src = base64src;
-            }
-          }
+      var handleAssetLoad = function() {
+        if( game._board ) {
+          game._board.render(true);
         }
-      }
+      };
+
+      var hexColorcheck = new RegExp('^#[A-F0-9+]{3,6}', 'i');
+      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');
 
       if( typeof this._theme.complexBlocks !== 'undefined' ){
         var keys = Object.keys(this._theme.complexBlocks);
@@ -987,10 +1005,28 @@
         for( var i = 0; i < keys.length; i++ ) {
           this._theme.complexBlocks[ keys[i] ]
           if( typeof this._theme.complexBlocks[ keys[i] ] === 'string' ) {
-            if( base64check.test( this._theme.complexBlocks[ keys[i] ] ) ) {
-              var base64src = this._theme.complexBlocks[ keys[i] ];
+            if( ! hexColorcheck.test( this._theme.complexBlocks[ keys[i] ] ) ) {
+              var src = this._theme.complexBlocks[ keys[i] ];
               this._theme.complexBlocks[ keys[i] ] = new Image();
-              this._theme.complexBlocks[ keys[i] ].src = base64src;
+              this._theme.complexBlocks[ keys[i] ].src = src;
+              this._theme.complexBlocks[ keys[i] ].onload = handleAssetLoad;
+            }
+          }
+        }
+      }
+      else if( typeof this._theme.blocks !== 'undefined' ){
+        var keys = Object.keys(this._theme.blocks);
+
+        // Load the blocks
+        for( var i = 0; i < keys.length; i++ ) {
+          this._theme.blocks[ keys[i] ]
+          if( typeof this._theme.blocks[ keys[i] ] === 'string' ) {
+            // If not a hex color, assume it's a base64 or url
+            if( ! hexColorcheck.test( this._theme.blocks[ keys[i] ] ) ) {
+              var src = this._theme.blocks[ keys[i] ];
+              this._theme.blocks[ keys[i] ] = new Image();
+              this._theme.blocks[ keys[i] ].src = src;
+              this._theme.blocks[ keys[i] ].onload = handleAssetLoad;
             }
           }
         }
@@ -999,10 +1035,11 @@
       // Load the bg
       if( typeof this._theme.backgroundGrid !== 'undefined' ){
         if( typeof this._theme.backgroundGrid === 'string' ) {
-          if( base64check.test( this._theme.backgroundGrid ) ) {
-            var base64src = this._theme.backgroundGrid;
+          if( ! hexColorcheck.test( this._theme.backgroundGrid ) ) {
+            var src = this._theme.backgroundGrid;
             this._theme.backgroundGrid = new Image();
-            this._theme.backgroundGrid.src = base64src;
+            this._theme.backgroundGrid.src = src;
+            this._theme.backgroundGrid.onload = handleAssetLoad;
           }
         }
       }
@@ -1349,21 +1386,20 @@
       game._$touchRotateRight.unbind('touchstart');
       game._$touchDrop.unbind('touchstart');
 
-      if( ! game.options.autoplay ) {
-        if( enable ) {
-          game._$touchLeft.show().bind('touchstart', moveLeft);
-          game._$touchRight.show().bind('touchstart', moveRight);
-          game._$touchRotateLeft.show().bind('touchstart', rotateLeft);
-          game._$touchRotateRight.show().bind('touchstart', rotateRight);
-          game._$touchDrop.show().bind('touchstart', drop);
-        } else {
-          game._$touchLeft.hide();
-          game._$touchRight.hide();
-          game._$touchRotateLeft.hide();
-          game._$touchRotateRight.hide();
-          game._$touchDrop.hide();
-        }
+      if( ! game.options.autoplay && enable ) {
+        game._$touchLeft.show().bind('touchstart', moveLeft);
+        game._$touchRight.show().bind('touchstart', moveRight);
+        game._$touchRotateLeft.show().bind('touchstart', rotateLeft);
+        game._$touchRotateRight.show().bind('touchstart', rotateRight);
+        game._$touchDrop.show().bind('touchstart', drop);
+      } else {
+        game._$touchLeft.hide();
+        game._$touchRight.hide();
+        game._$touchRotateLeft.hide();
+        game._$touchRotateRight.hide();
+        game._$touchDrop.hide();
       }
+
     }
 
   });
