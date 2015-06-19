@@ -320,7 +320,7 @@
      * The blockType is used to draw any block. 
      * The falling attribute is needed to apply different styles for falling and placed blocks.
      */
-    _drawBlock: function(x, y, blockType, blockIndex, blockRotation, falling) {
+    _drawBlock: function(x, y, blockType, blockVariation, blockIndex, blockRotation, falling) {
 
       // convert x and y to pixel
       x = x * this._block_size;
@@ -331,7 +331,7 @@
       var borderDistance = Math.round(this._block_size*0.23);
       var squareDistance = Math.round(this._block_size*0.30);
 
-      var color = this._getBlockColor(blockType, blockIndex, falling);
+      var color = this._getBlockColor(blockType, blockVariation, blockIndex, falling);
 
       // Draw the main square
       this._ctx.globalAlpha = 1.0;
@@ -438,7 +438,7 @@
     },
 
 
-    _getBlockColor: function(blockName, blockIndex, falling) {
+    _getBlockColor: function(blockType, blockVariation, blockIndex, falling) {
       /**
        * The theme allows us to do many things:
        * - Use a specific color for the falling block (primary), regardless of the proper color.
@@ -447,22 +447,37 @@
        * - With primary and secondary as null, all blocks keep their original colors.
        */
 
+      var getBlockVariation = function(blockTheme, blockVariation) {
+        if( $.isArray(blockTheme) ) {
+          if( blockVariation !== null && typeof blockTheme[blockVariation] !== 'undefined' ) {
+            return blockTheme[blockVariation];
+          } 
+          else if(blockTheme.length > 0) {
+            return blockTheme[0];
+          } else {
+            return null;
+          }
+        } else {
+          return blockTheme;
+        }
+      }
+
       if( typeof falling !== 'boolean' ){ falling = true; }
       if( falling ) {
         if( typeof this._theme.primary === 'string' && this._theme.primary !== '' ) {
           return this._theme.primary;
         } else if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
-          return this._theme.blocks[blockName];
+          return getBlockVariation(this._theme.blocks[blockType], blockVariation);
         } else {
-          return this._theme.complexBlocks[blockName];
+          return getBlockVariation(this._theme.complexBlocks[blockType], blockVariation);
         }
       } else {
         if( typeof this._theme.secondary === 'string' && this._theme.secondary !== '' ) {
           return this._theme.secondary;
         } else if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
-          return this._theme.blocks[blockName];
+          return getBlockVariation(this._theme.blocks[blockType], blockVariation);
         } else {
-          return this._theme.complexBlocks[blockName];
+          return getBlockVariation(this._theme.complexBlocks[blockType], blockVariation);
         }
       }
     },
@@ -494,9 +509,11 @@
           },
 
           blockType: blockType,
+          blockVariation: null,
           blocksLen: orientations[0].length,
           orientations: orientations,
           orientation: 0, // 4 possible
+
           rotate: function(right) {
             var orientation = (this.orientation + (right ? -1 : 1) + 4) % 4;
 
@@ -515,12 +532,14 @@
           moveLeft: function() {
             if (!game._checkCollisions(this.x - 1, this.y, this.getBlocks())) {
               this.x--;
+              game._board.animate();
               game._board.renderChanged = true;
             }
           },
           drop: function() {
             if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
               this.y++;
+              game._board.animate();
               game._board.renderChanged = true;
             }
           },
@@ -535,7 +554,7 @@
                 index = 0;
 
             for (; i<this.blocksLen; i += 2) {
-              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, index, this.orientation, true);
+              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, this.blockVariation, index, this.orientation, true);
               index++;
             }
           },
@@ -675,9 +694,14 @@
         check: function(x, y) {
           return this.data[this.asIndex(x, y)];
         },
-        add: function(x, y, blockType, blockIndex, blockOrientation) {
+        add: function(x, y, blockType, blockVariation, blockIndex, blockOrientation) {
           if (x >= 0 && x < game._BLOCK_WIDTH && y >= 0 && y < game._BLOCK_HEIGHT) {
-            this.data[this.asIndex(x, y)] = {blockType: blockType, blockIndex: blockIndex, blockOrientation: blockOrientation};
+            this.data[this.asIndex(x, y)] = {
+              blockType: blockType, 
+              blockVariation: blockVariation, 
+              blockIndex: blockIndex, 
+              blockOrientation: blockOrientation
+            };
           }
         },
         getFreeSpaces: function() {
@@ -749,7 +773,7 @@
             if (this.data[i] !== undefined) {
               row = this.asY(i);
               var block = this.data[i];
-              game._drawBlock(this.asX(i), row, block.blockType, block.blockIndex, block.blockOrientation);
+              game._drawBlock(this.asX(i), row, block.blockType, block.blockVariation, block.blockIndex, block.blockOrientation);
             }
           }
         }
@@ -857,6 +881,21 @@
             result.x = result.best_x;
           }
 
+          if( typeof game._theme.complexBlocks !== 'undefined' ) {
+            if( $.isArray(game._theme.complexBlocks[result.blockType]) ) {
+              result.blockVariation = game._randInt(0, game._theme.complexBlocks[result.blockType].length-1);
+            } else {
+              result.blockVariation = null;
+            }
+          }
+          else if( typeof game._theme.blocks !== 'undefined' ) {
+            if( $.isArray(game._theme.blocks[result.blockType]) ) {
+              result.blockVariation = game._randInt(0, game._theme.blocks[result.blockType].length-1);
+            } else {
+              result.blockVariation = null;
+            }
+          }
+
           return result;
         },
 
@@ -883,7 +922,7 @@
                 drop = false;
                 var blockIndex = 0;
                 for (var i=0; i<cur.blocksLen; i+=2) {
-                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType, blockIndex, cur.orientation);
+                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType, cur.blockVariation, blockIndex, cur.orientation);
                   if (y + blocks[i] < 0) {
                     gameOver = true;
                   }
@@ -928,25 +967,26 @@
 
         createRandomBoard: function() {
 
-          var start = [], blockTypes = [], i, ilen, j, jlen, color;
+          var start = [], blockTypes = [], i, ilen, j, jlen, blockType;
 
           // Draw a random blockrain screen
           blockTypes = Object.keys(game._shapeFactory);
 
           for (i=0, ilen=game._BLOCK_WIDTH; i<ilen; i++) {
             for (j=0, jlen=game._randChoice([game._randInt(0, 8), game._randInt(5, 9)]); j<jlen; j++) {
-              if (!color || !game._randInt(0, 3)) color = game._randChoice(blockTypes);
+              if (!blockType || !game._randInt(0, 3)) blockType = game._randChoice(blockTypes);
 
               // Use a random piece and orientation
-              game._filled.add(i, game._BLOCK_HEIGHT - j, color, game._randInt(0,3), game._randInt(0,3));
+              // Todo: Use an actual random variation
+              game._filled.add(i, game._BLOCK_HEIGHT - j, blockType, game._randInt(0,3), null, game._randInt(0,3));
             }
           }
 
           /*
           for (i=0, ilen=WIDTH; i<ilen; i++) {
             for (j=0, jlen=randChoice([randInt(0, 8), randInt(5, 9)]); j<jlen; j++) {
-              if (!color || !randInt(0, 3)) color = randChoice(blockTypes);
-              start.push([i, HEIGHT - j, color]);
+              if (!blockType || !randInt(0, 3)) blockType = randChoice(blockTypes);
+              start.push([i, HEIGHT - j, blockType]);
             }
           }
 
@@ -989,29 +1029,50 @@
 
       var game = this;
 
+      var hexColorcheck = new RegExp('^#[A-F0-9+]{3,6}', 'i');
+      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');
+
       var handleAssetLoad = function() {
+        // Rerender the board as soon as an asset loads
         if( game._board ) {
           game._board.render(true);
         }
       };
 
-      var hexColorcheck = new RegExp('^#[A-F0-9+]{3,6}', 'i');
-      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');
+      var loadAsset = function(src) {
+        var plainSrc = src;
+        if( ! hexColorcheck.test( plainSrc ) ) {
+          // It's an image
+          src = new Image();
+          src.src = plainSrc;
+          src.onload = handleAssetLoad;
+        } else {
+          // It's a color
+          src = plainSrc;
+        }
+        return src;
+      };
+
+      var startAssetLoad = function(block) {
+        // Assets can be an array of variation so they can change color/design randomly
+        if( $.isArray(block) && block.length > 0 ) {
+          for( var i=0; i<block.length; i++ ) {
+            block[i] = loadAsset(block[i]);
+          }
+        }
+        else if( typeof block === 'string' ) {
+          block = loadAsset(block);
+        }
+        return block;
+      };
+
 
       if( typeof this._theme.complexBlocks !== 'undefined' ){
         var keys = Object.keys(this._theme.complexBlocks);
 
         // Load the complexBlocks
         for( var i = 0; i < keys.length; i++ ) {
-          this._theme.complexBlocks[ keys[i] ]
-          if( typeof this._theme.complexBlocks[ keys[i] ] === 'string' ) {
-            if( ! hexColorcheck.test( this._theme.complexBlocks[ keys[i] ] ) ) {
-              var src = this._theme.complexBlocks[ keys[i] ];
-              this._theme.complexBlocks[ keys[i] ] = new Image();
-              this._theme.complexBlocks[ keys[i] ].src = src;
-              this._theme.complexBlocks[ keys[i] ].onload = handleAssetLoad;
-            }
-          }
+          this._theme.complexBlocks[ keys[i] ] = startAssetLoad( this._theme.complexBlocks[ keys[i] ] );
         }
       }
       else if( typeof this._theme.blocks !== 'undefined' ){
@@ -1019,16 +1080,7 @@
 
         // Load the blocks
         for( var i = 0; i < keys.length; i++ ) {
-          this._theme.blocks[ keys[i] ]
-          if( typeof this._theme.blocks[ keys[i] ] === 'string' ) {
-            // If not a hex color, assume it's a base64 or url
-            if( ! hexColorcheck.test( this._theme.blocks[ keys[i] ] ) ) {
-              var src = this._theme.blocks[ keys[i] ];
-              this._theme.blocks[ keys[i] ] = new Image();
-              this._theme.blocks[ keys[i] ].src = src;
-              this._theme.blocks[ keys[i] ].onload = handleAssetLoad;
-            }
-          }
+          this._theme.blocks[ keys[i] ] = startAssetLoad( this._theme.blocks[ keys[i] ] );
         }
       }
 
