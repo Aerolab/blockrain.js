@@ -514,8 +514,8 @@
           orientations: orientations,
           orientation: 0, // 4 possible
 
-          rotate: function(right) {
-            var orientation = (this.orientation + (right ? -1 : 1) + 4) % 4;
+          rotate: function(direction) {
+            var orientation = (this.orientation + (direction === 'left' ? 1 : -1) + 4) % 4;
 
             //TODO - when past limit - auto shift and remember that too!
             if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
@@ -523,6 +523,7 @@
               game._board.renderChanged = true;
             }
           },
+
           moveRight: function() {
             if (!game._checkCollisions(this.x + 1, this.y, this.getBlocks())) {
               this.x++;
@@ -532,17 +533,19 @@
           moveLeft: function() {
             if (!game._checkCollisions(this.x - 1, this.y, this.getBlocks())) {
               this.x--;
-              game._board.animate();
               game._board.renderChanged = true;
             }
           },
           drop: function() {
             if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
               this.y++;
+              // Reset the drop count, as we dropped the block sooner
+              game._board.dropCount = -1;
               game._board.animate();
               game._board.renderChanged = true;
             }
           },
+
           getBlocks: function(orientation) { // optional param
             return this.orientations[orientation !== undefined ? orientation : this.orientation];
           },
@@ -747,7 +750,7 @@
             this._popRow(rows[i]);
             game._board.lines++;
             if( game._board.lines % 10 == 0 && game._board.dropDelay > 1 ) {
-              //board.dropDelay -= 2;
+              board.dropDelay *= 0.9;
             }
           }
 
@@ -813,14 +816,21 @@
       var info = this._info;
 
       this._board = {
+        // This sets the tick rate for the game
         animateDelay: 1000 / game.options.speed,
+
         animateTimeoutId: null,
         cur: null,
 
         lines: 0,
 
+        // DropCount increments on each animation frame. After n frames, the piece drops 1 square
+        // By making dropdelay lower (down to 0), the pieces move faster, up to once per tick (animateDelay).
         dropCount: 0,
         dropDelay: 5, //5,
+
+        holding: {left: null, right: null, drop: null},
+        holdingThreshold: 200, // How long do you have to hold a key to make commands repeat (in ms)
 
         started: false,
         gameover: false,
@@ -901,7 +911,9 @@
 
         animate: function() {
           var drop = false,
-              gameOver = false;
+              moved = false,
+              gameOver = false,
+              now = Date.now();
 
           if( this.animateTimeoutId ){ clearTimeout(this.animateTimeoutId); }
 
@@ -910,12 +922,29 @@
           if( !this.paused && !this.gameover ) {
 
             this.dropCount++;
-            if( this.dropCount >= this.dropDelay || game.options.autoplay ) {
+            
+            // Drop by delay or holding
+            if( (this.dropCount >= this.dropDelay) || 
+                (game.options.autoplay) || 
+                (this.holding.drop && (now - this.holding.drop) >= this.holdingThreshold) ) {
               drop = true;
+            moved = true;
               this.dropCount = 0;
             }
 
-            // test for a collision
+            // Move Left by holding
+            if( this.holding.left && (now - this.holding.left) >= this.holdingThreshold ) {
+              moved = true;
+              this.cur.moveLeft();
+            }
+
+            // Move Right by holding
+            if( this.holding.right && (now - this.holding.right) >= this.holdingThreshold ) {
+              moved = true;
+              this.cur.moveRight();
+            }
+
+            // Test for a collision, add the piece to the filled blocks and fetch the next one
             if (drop) {
               var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
               if (game._checkCollisions(x, y+1, blocks, true)) {
@@ -935,8 +964,13 @@
             }
           }
 
+          // Drop
           if (drop) {
+            moved = true;
             this.cur.y++;
+          }
+
+          if( drop || moved ) {
             this.renderChanged = true;
           }
 
@@ -1332,32 +1366,83 @@
 
       var game = this;
 
+      var moveLeft = function(start) {
+        if( ! start ) { game._board.holding.left = null; return; }
+        if( ! game._board.holding.left ) {
+          game._board.cur.moveLeft(); 
+          game._board.holding.left = Date.now(); 
+        }
+      }
+      var moveRight = function(start) {
+        if( ! start ) { game._board.holding.right = null; return; }
+        if( ! game._board.holding.right ) {
+          game._board.cur.moveRight(); 
+          game._board.holding.right = Date.now(); 
+        }
+      }
+      var drop = function(start) {
+        if( ! start ) { game._board.holding.drop = null; return; }
+        if( ! game._board.holding.drop ) {
+          game._board.cur.drop(); 
+          game._board.holding.drop = Date.now();
+        }
+      }
+      var rotateLeft = function() {
+        game._board.cur.rotate('left'); 
+      }
+      var rotateRight = function() {
+        game._board.cur.rotate('right'); 
+      }
+
       // Handlers: These are used to be able to bind/unbind controls
-      var handleKeyPress = function(evt) {
+      var handleKeyDown = function(evt) {
+        if( ! game._board.cur ) { return true; }
         var caught = false;
-        if (game._board.cur) {
-          caught = true;
-          if (game.options.asdwKeys) {
-            switch(evt.keyCode) {
-              case 65: /*a*/    game._board.cur.moveLeft(); break;
-              case 87: /*w*/    game._board.cur.rotate(true); break;
-              case 68: /*d*/    game._board.cur.moveRight(); break;
-              case 83: /*s*/    game._board.dropCount = game._board.dropDelay; break;
-            }
-          }
+
+        caught = true;
+        if (game.options.asdwKeys) {
           switch(evt.keyCode) {
-            case 37: /*left*/   game._board.cur.moveLeft(); break;
-            case 38: /*up*/     game._board.cur.rotate(true); break;
-            case 39: /*right*/  game._board.cur.moveRight(); break;
-            case 40: /*down*/   game._board.dropCount = game._board.dropDelay; break;
-            case 88: /*x*/      game._board.cur.rotate(true); break;
-            case 90: /*z*/      game._board.cur.rotate(false); break;
-            default: caught = false;
+            case 65: /*a*/    moveLeft(true); break;
+            case 68: /*d*/    moveRight(true); break;
+            case 83: /*s*/    drop(true); break;
+            case 87: /*w*/    game._board.cur.rotate('right'); break;
           }
+        }
+        switch(evt.keyCode) {
+          case 37: /*left*/   moveLeft(true); break;
+          case 39: /*right*/  moveRight(true); break;
+          case 40: /*down*/   drop(true); break;
+          case 38: /*up*/     game._board.cur.rotate('right'); break;
+          case 88: /*x*/      game._board.cur.rotate('right'); break;
+          case 90: /*z*/      game._board.cur.rotate('left'); break;
+          default: caught = false;
         }
         if (caught) evt.preventDefault();
         return !caught;
-      }
+      };
+
+
+      var handleKeyUp = function(evt) {
+        if( ! game._board.cur ) { return true; }
+        var caught = false;
+
+        caught = true;
+        if (game.options.asdwKeys) {
+          switch(evt.keyCode) {
+            case 65: /*a*/    moveLeft(false); break;
+            case 68: /*d*/    moveRight(false); break;
+            case 83: /*s*/    drop(false); break;
+          }
+        }
+        switch(evt.keyCode) {
+          case 37: /*left*/   moveLeft(false); break;
+          case 39: /*right*/  moveRight(false); break;
+          case 40: /*down*/   drop(false); break;
+          default: caught = false;
+        }
+        if (caught) evt.preventDefault();
+        return !caught;
+      };
 
       function isStopKey(evt) {
         var cfg = {
@@ -1371,35 +1456,26 @@
 
       function getKey(evt) { return 'safekeypress.' + evt.keyCode; }
 
-      function keypress(evt) {
-        var key = getKey(evt),
-            val = ($.data(this, key) || 0) + 1;
-        $.data(this, key, val);
-        if (val > 0) return handleKeyPress.call(this, evt);
-        return isStopKey(evt);
-      }
-
       function keydown(evt) {
         var key = getKey(evt);
         $.data(this, key, ($.data(this, key) || 0) - 1);
-        return handleKeyPress.call(this, evt);
+        return handleKeyDown.call(this, evt);
       }
 
       function keyup(evt) {
         $.data(this, getKey(evt), 0);
+        handleKeyUp.call(this, evt);
         return isStopKey(evt);
       }
 
       // Unbind everything by default
       // Use event namespacing so we don't ruin other keypress events
-      $(document) .unbind('keypress.blockrain')
-                  .unbind('keydown.blockrain')
+      $(document) .unbind('keydown.blockrain')
                   .unbind('keyup.blockrain');
 
       if( ! game.options.autoplay ) {
         if( enable ) {
-          $(document) .bind('keypress.blockrain', keypress)
-                      .bind('keydown.blockrain', keydown)
+          $(document) .bind('keydown.blockrain', keydown)
                       .bind('keyup.blockrain', keyup);
         }
       }
@@ -1410,40 +1486,58 @@
 
       var game = this;
 
+      // Movements can be held for faster movement
       var moveLeft = function(event){
         event.preventDefault();
         game._board.cur.moveLeft();
+        game._board.holding.left = Date.now();
       };
       var moveRight = function(event){
         event.preventDefault();
         game._board.cur.moveRight();
+        game._board.holding.right = Date.now();
       };
       var drop = function(event){
         event.preventDefault();
-        game._board.dropCount = game._board.dropDelay;
+        game._board.cur.drop();
+        game._board.holding.drop = Date.now();
       };
+      var endMoveLeft = function(event){
+        event.preventDefault();
+        game._board.holding.left = null;
+      };
+      var endMoveRight = function(event){
+        event.preventDefault();
+        game._board.holding.right = null;
+      };
+      var endDrop = function(event){
+        event.preventDefault();
+        game._board.holding.drop = null;
+      };
+
+      // Rotations can't be held
       var rotateLeft = function(event){
         event.preventDefault();
-        game._board.cur.rotate(false);
+        game._board.cur.rotate('left');
       };
       var rotateRight = function(event){
         event.preventDefault();
-        game._board.cur.rotate(true);
+        game._board.cur.rotate('right');
       };
 
       // Unbind everything by default
-      game._$touchLeft.unbind('touchstart');
-      game._$touchRight.unbind('touchstart');
-      game._$touchRotateLeft.unbind('touchstart');
-      game._$touchRotateRight.unbind('touchstart');
-      game._$touchDrop.unbind('touchstart');
+      game._$touchLeft.unbind('touchstart touchend click');
+      game._$touchRight.unbind('touchstart touchend click');
+      game._$touchRotateLeft.unbind('touchstart touchend click');
+      game._$touchRotateRight.unbind('touchstart touchend click');
+      game._$touchDrop.unbind('touchstart touchend click');
 
       if( ! game.options.autoplay && enable ) {
-        game._$touchLeft.show().bind('touchstart', moveLeft);
-        game._$touchRight.show().bind('touchstart', moveRight);
-        game._$touchRotateLeft.show().bind('touchstart', rotateLeft);
-        game._$touchRotateRight.show().bind('touchstart', rotateRight);
-        game._$touchDrop.show().bind('touchstart', drop);
+        game._$touchLeft.show().bind('touchstart click', moveLeft).bind('touchend', endMoveLeft);
+        game._$touchRight.show().bind('touchstart click', moveRight).bind('touchend', endMoveRight);
+        game._$touchDrop.show().bind('touchstart click', drop).bind('touchend', endDrop);
+        game._$touchRotateLeft.show().bind('touchstart click', rotateLeft);
+        game._$touchRotateRight.show().bind('touchstart click', rotateRight);
       } else {
         game._$touchLeft.hide();
         game._$touchRight.hide();
