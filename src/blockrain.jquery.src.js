@@ -58,6 +58,7 @@
       this._board.cur = this._board.nextShape();
       this._board.started = true;
       this._board.gameover = false;
+      this._board.dropDelay = 5;
       this._board.render(true);
       this._board.animate();
 
