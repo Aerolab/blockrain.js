@@ -314,179 +314,96 @@
     },
 
 
-
-    /**
-     * Draws one block (Each piece is made of 4 blocks)
-     * The blockType is used to draw any block. 
-     * The falling attribute is needed to apply different styles for falling and placed blocks.
-     */
-    _drawBlock: function(x, y, blockType, blockVariation, blockIndex, blockRotation, falling) {
-
-      // convert x and y to pixel
-      x = x * this._block_size;
-      y = y * this._block_size;
-
-      falling = typeof falling === 'boolean' ? falling : false;
-      var borderWidth = this._theme.strokeWidth;
-      var borderDistance = Math.round(this._block_size*0.23);
-      var squareDistance = Math.round(this._block_size*0.30);
-
-      var color = this._getBlockColor(blockType, blockVariation, blockIndex, falling);
-
-      // Draw the main square
-      this._ctx.globalAlpha = 1.0;
-
-      // If it's an image, the block has a specific texture. Use that.
-      if( color instanceof Image ) {
-        this._ctx.globalAlpha = 1.0;
-
-        // Not loaded
-        if( color.width === 0 || color.height === 0 ){ return; }
-
-        // A square is the same style for all blocks
-        if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
-          this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
-        }
-        // A custom texture
-        else if( typeof this._theme.complexBlocks !== 'undefined' && this._theme.complexBlocks !== null ) {
-          if( typeof blockIndex === 'undefined' || blockIndex === null ){ blockIndex = 0; }
-
-          var coords = this._getCustomBlockImageCoordinates(color, blockType, blockIndex);
-
-          this._ctx.save();
-
-          this._ctx.translate(x, y);
-          this._ctx.translate(this._block_size/2, this._block_size/2);
-          this._ctx.rotate(-Math.PI/2 * blockRotation);
-          this._ctx.drawImage(color,  coords.x, coords.y, coords.w, coords.h, 
-                                      -this._block_size/2, -this._block_size/2, this._block_size, this._block_size);
-          
-          this._ctx.restore();
-
-        } else {
-          // ERROR
-          this._ctx.fillStyle = '#ff0000';
-          this._ctx.fillRect(x, y, this._block_size, this._block_size);
-        }
-      }
-      else if( typeof color === 'string' )
-      {
-        this._ctx.fillStyle = color;
-        this._ctx.fillRect(x, y, this._block_size, this._block_size);
-
-        // Inner Shadow
-        if( typeof this._theme.innerShadow === 'string' ) {
-          this._ctx.globalAlpha = 1.0;
-          this._ctx.strokeStyle = this._theme.innerShadow;
-          this._ctx.lineWidth = 1.0;
-
-          // Draw the borders
-          this._ctx.strokeRect(x+1, y+1, this._block_size-2, this._block_size-2);
-        }
-
-        // Decoration (borders)
-        if( typeof this._theme.stroke === 'string' ) {
-          this._ctx.globalAlpha = 1.0;
-          this._ctx.fillStyle = this._theme.stroke;
-          this._ctx.strokeStyle = this._theme.stroke;
-          this._ctx.lineWidth = borderWidth;
-
-          // Draw the borders
-          this._ctx.strokeRect(x, y, this._block_size, this._block_size);
-        }
-        if( typeof this._theme.innerStroke === 'string' ) {
-          // Draw the inner dashes
-          this._ctx.fillStyle = this._theme.innerStroke;
-          this._ctx.fillRect(x+borderDistance, y+borderDistance, this._block_size-borderDistance*2, borderWidth);
-          // The rects shouldn't overlap, to prevent issues with transparency
-          this._ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, this._block_size-borderDistance*2-borderWidth);
-        }
-        if( typeof this._theme.innerSquare === 'string' ) {
-          // Draw the inner square
-          this._ctx.fillStyle = this._theme.innerSquare;
-          this._ctx.globalAlpha = 0.2;
-          this._ctx.fillRect(x+squareDistance, y+squareDistance, this._block_size-squareDistance*2, this._block_size-squareDistance*2);
-        }
-      }
-
-      // Return the alpha back to 1.0 so we don't create any issues with other drawings.
-      this._ctx.globalAlpha = 1.0;
-    },
-
-
-    _getCustomBlockImageCoordinates: function(image, blockType, blockIndex) {
-      // The image is based on the first ("upright") orientation
-      var positions = this._shapeFactory[blockType]().orientations[0];
-      // Find the number of tiles it should have
-      var minX = Math.min(positions[0], positions[2], positions[4], positions[6]);
-      var maxX = Math.max(positions[0], positions[2], positions[4], positions[6]);
-      var minY = Math.min(positions[1], positions[3], positions[5], positions[7]);
-      var maxY = Math.max(positions[1], positions[3], positions[5], positions[7]);
-      var rangeX = maxX - minX + 1;
-      var rangeY = maxY - minY + 1;
-      
-      // X and Y sizes should match. Should.
-      var tileSizeX = image.width / rangeX;
-      var tileSizeY = image.height / rangeY;
-
-      return {
-        x: tileSizeX * (positions[blockIndex*2]-minX),
-        y: tileSizeY * Math.abs(minY-positions[blockIndex*2+1]),
-        w: tileSizeX,
-        h: tileSizeY
-      };
-    },
-
-
-    _getBlockColor: function(blockType, blockVariation, blockIndex, falling) {
-      /**
-       * The theme allows us to do many things:
-       * - Use a specific color for the falling block (primary), regardless of the proper color.
-       * - Use another color for the placed blocks (secondary).
-       * - Default to the "original" block color in any of those cases by setting primary and/or secondary to null.
-       * - With primary and secondary as null, all blocks keep their original colors.
-       */
-
-      var getBlockVariation = function(blockTheme, blockVariation) {
-        if( $.isArray(blockTheme) ) {
-          if( blockVariation !== null && typeof blockTheme[blockVariation] !== 'undefined' ) {
-            return blockTheme[blockVariation];
-          } 
-          else if(blockTheme.length > 0) {
-            return blockTheme[0];
-          } else {
-            return null;
-          }
-        } else {
-          return blockTheme;
-        }
-      }
-
-      if( typeof falling !== 'boolean' ){ falling = true; }
-      if( falling ) {
-        if( typeof this._theme.primary === 'string' && this._theme.primary !== '' ) {
-          return this._theme.primary;
-        } else if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
-          return getBlockVariation(this._theme.blocks[blockType], blockVariation);
-        } else {
-          return getBlockVariation(this._theme.complexBlocks[blockType], blockVariation);
-        }
-      } else {
-        if( typeof this._theme.secondary === 'string' && this._theme.secondary !== '' ) {
-          return this._theme.secondary;
-        } else if( typeof this._theme.blocks !== 'undefined' && this._theme.blocks !== null ) {
-          return getBlockVariation(this._theme.blocks[blockType], blockVariation);
-        } else {
-          return getBlockVariation(this._theme.complexBlocks[blockType], blockVariation);
-        }
-      }
-    },
-
-
     /**
      * Shapes
      */
     _shapeFactory: null,
+
+    _shapes: {
+      /**
+       * The shapes have a reference point (the dot) and always rotate left.
+       * Keep in mind that the blocks should keep in the same relative position when rotating,
+       * to allow for custom per-block themes.
+       */
+      /*            
+       *   X      
+       *   O  XOXX
+       *   X      
+       *   X
+       *   .   .      
+       */
+      line: [
+          [ 0, -1,   0, -2,   0, -3,   0, -4],
+          [ 2, -2,   1, -2,   0, -2,  -1, -2],
+          [ 0, -4,   0, -3,   0, -2,   0, -1],
+          [-1, -2,   0, -2,   1, -2,   2, -2]
+      ],
+      /*
+       *  XX
+       *  XX
+       */
+      square: [
+        [0,  0,   1,  0,   0, -1,   1, -1],
+        [1,  0,   1, -1,   0,  0,   0, -1],
+        [1, -1,   0, -1,   1,  0,   0,  0],
+        [0, -1,   0,  0,   1, -1,   1,  0]
+      ],
+      /*
+       *    X   X       X
+       *   XOX XO  XOX  OX
+       *   .   .X  .X  .X
+       */
+      arrow: [
+        [0, -1,   1, -1,   2, -1,   1, -2],
+        [1,  0,   1, -1,   1, -2,   0, -1],
+        [2, -1,   1, -1,   0, -1,   1,  0],
+        [1, -2,   1, -1,   1,  0,   2, -1]
+      ],
+      /*
+       *    X    X XX 
+       *    O  XOX  O XOX 
+       *   .XX .   .X X   
+       */
+      rightHook: [
+        [2,  0,   1,  0,   1, -1,   1, -2],
+        [2, -2,   2, -1,   1, -1,   0, -1],
+        [0, -2,   1, -2,   1, -1,   1,  0],
+        [0,  0,   0, -1,   1, -1,   2, -1]
+      ],
+      /*
+       *    X      XX X  
+       *    O XOX  O  XOX
+       *   XX . X .X  .  
+       */
+      leftHook: [
+        [0,  0,   1,  0,   1, -1,   1, -2],
+        [2,  0,   2, -1,   1, -1,   0, -1],
+        [2, -2,   1, -2,   1, -1,   1,  0],
+        [0, -2,   0, -1,   1, -1,   2, -1]
+      ],
+      /*
+       *    X  XX 
+       *   XO   OX
+       *   X   .  
+       */
+      leftZag: [
+        [0,  0,   0, -1,   1, -1,   1, -2],
+        [2, -1,   1, -1,   1, -2,   0, -2],
+        [1, -2,   1, -1,   0, -1,   0,  0],
+        [0, -2,   1, -2,   1, -1,   2, -1]
+      ],
+      /*
+       *   X    
+       *   XO   OX
+       *   .X  XX   
+       */
+      rightZag: [
+        [1,  0,   1, -1,   0, -1,   0, -2],
+        [2, -1,   1, -1,   1,  0,   0,  0],
+        [0, -2,   0, -1,   1, -1,   1,  0],
+        [0,  0,   1,  0,   1, -1,   2, -1]
+      ]
+    },
 
     _SetupShapeFactory: function(){
       var game = this;
@@ -557,7 +474,7 @@
                 index = 0;
 
             for (; i<this.blocksLen; i += 2) {
-              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, this.blockVariation, index, this.orientation, true);
+              game._board.drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, this.blockVariation, index, this.orientation, true);
               index++;
             }
           },
@@ -585,102 +502,26 @@
       };
 
       this._shapeFactory = {
-        /**
-         * The shapes have a reference point (the dot) and always rotate left.
-         * Keep in mind that the blocks should keep in the same relative position when rotating,
-         * to allow for custom per-block themes.
-         */
         line: function() {
-          /*            
-           *   X      
-           *   O  XOXX
-           *   X      
-           *   X
-           *   .   .      
-           */
-          return new Shape(game, [
-            [ 0, -1,   0, -2,   0, -3,   0, -4],
-            [ 2, -2,   1, -2,   0, -2,  -1, -2],
-            [ 0, -4,   0, -3,   0, -2,   0, -1],
-            [-1, -2,   0, -2,   1, -2,   2, -2]
-          ], false, 'line');
+          return new Shape(game, game._shapes.line, false, 'line');
         },
         square: function() {
-          /*
-           *  XX
-           *  XX
-           */
-          return new Shape(game, [
-    		    [0,  0,   1,  0,   0, -1,   1, -1],
-            [1,  0,   1, -1,   0,  0,   0, -1],
-            [1, -1,   0, -1,   1,  0,   0,  0],
-            [0, -1,   0,  0,   1, -1,   1,  0]
-          ], false, 'square');
+          return new Shape(game, game._shapes.square, false, 'square');
         },
         arrow: function() {
-          /*
-           *    X   X       X
-           *   XOX XO  XOX  OX
-           *   .   .X  .X  .X
-           */
-          return new Shape(game, [
-            [0, -1,   1, -1,   2, -1,   1, -2],
-            [1,  0,   1, -1,   1, -2,   0, -1],
-            [2, -1,   1, -1,   0, -1,   1,  0],
-            [1, -2,   1, -1,   1,  0,   2, -1]
-          ], false, 'arrow');
-        },
-        rightHook: function() {
-          /*
-           *    X    X XX 
-           *    O  XOX  O XOX 
-           *   .XX .   .X X   
-           */
-          return new Shape(game, [
-            [2,  0,   1,  0,   1, -1,   1, -2],
-            [2, -2,   2, -1,   1, -1,   0, -1],
-            [0, -2,   1, -2,   1, -1,   1,  0],
-            [0,  0,   0, -1,   1, -1,   2, -1]
-          ], false, 'rightHook');
+          return new Shape(game, game._shapes.arrow, false, 'arrow');
         },
         leftHook: function() {
-          /*
-           *    X      XX X  
-           *    O XOX  O  XOX
-           *   XX . X .X  .  
-           */
-          return new Shape(game, [
-            [0,  0,   1,  0,   1, -1,   1, -2],
-            [2,  0,   2, -1,   1, -1,   0, -1],
-            [2, -2,   1, -2,   1, -1,   1,  0],
-            [0, -2,   0, -1,   1, -1,   2, -1]
-          ], false, 'leftHook');
+          return new Shape(game, game._shapes.leftHook, false, 'leftHook');
+        },
+        rightHook: function() {
+          return new Shape(game, game._shapes.rightHook, false, 'rightHook');
         },
         leftZag: function() {
-          /*
-           *    X  XX 
-           *   XO   OX
-           *   X   .  
-           */
-          return new Shape(game, [
-          	[0,  0,   0, -1,   1, -1,   1, -2],
-          	[2, -1,   1, -1,   1, -2,   0, -2],
-          	[1, -2,   1, -1,   0, -1,   0,  0],
-          	[0, -2,   1, -2,   1, -1,   2, -1]
-          ], false, 'leftZag');
+          return new Shape(game, game._shapes.leftZag, false, 'leftZag');
         },
         rightZag: function() {
-          /*
-           *   X    
-           *   XO   OX
-           *   .X  XX   
-           */
-          return new Shape(game, [
-            [1,  0,   1, -1,   0, -1,   0, -2],
-            [2, -1,   1, -1,   1,  0,   0,  0],
-            [0, -2,   0, -1,   1, -1,   1,  0],
-            [0,  0,   1,  0,   1, -1,   2, -1]
-          ], false, 'rightZag');
+          return new Shape(game, game._shapes.rightZag, false, 'rightZag');
         }
       };
     },
@@ -750,7 +591,7 @@
             this._popRow(rows[i]);
             game._board.lines++;
             if( game._board.lines % 10 == 0 && game._board.dropDelay > 1 ) {
-              board.dropDelay *= 0.9;
+              game._board.dropDelay *= 0.9;
             }
           }
 
@@ -776,7 +617,7 @@
             if (this.data[i] !== undefined) {
               row = this.asY(i);
               var block = this.data[i];
-              game._drawBlock(this.asX(i), row, block.blockType, block.blockVariation, block.blockIndex, block.blockOrientation);
+              game._board.drawBlock(this.asX(i), row, block.blockType, block.blockVariation, block.blockIndex, block.blockOrientation);
             }
           }
         }
@@ -1044,7 +885,175 @@
             game._filled.draw();
             this.cur.draw();
           }
+        },
+
+
+        /**
+         * Draws one block (Each piece is made of 4 blocks)
+         * The blockType is used to draw any block. 
+         * The falling attribute is needed to apply different styles for falling and placed blocks.
+         */
+        drawBlock: function(x, y, blockType, blockVariation, blockIndex, blockRotation, falling) {
+
+          // convert x and y to pixel
+          x = x * game._block_size;
+          y = y * game._block_size;
+
+          falling = typeof falling === 'boolean' ? falling : false;
+          var borderWidth = game._theme.strokeWidth;
+          var borderDistance = Math.round(game._block_size*0.23);
+          var squareDistance = Math.round(game._block_size*0.30);
+
+          var color = this.getBlockColor(blockType, blockVariation, blockIndex, falling);
+
+          // Draw the main square
+          game._ctx.globalAlpha = 1.0;
+
+          // If it's an image, the block has a specific texture. Use that.
+          if( color instanceof Image ) {
+            game._ctx.globalAlpha = 1.0;
+
+            // Not loaded
+            if( color.width === 0 || color.height === 0 ){ return; }
+
+            // A square is the same style for all blocks
+            if( typeof game._theme.blocks !== 'undefined' && game._theme.blocks !== null ) {
+              game._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, game._block_size, game._block_size);
+            }
+            // A custom texture
+            else if( typeof game._theme.complexBlocks !== 'undefined' && game._theme.complexBlocks !== null ) {
+              if( typeof blockIndex === 'undefined' || blockIndex === null ){ blockIndex = 0; }
+
+              var getCustomBlockImageCoordinates = function(image, blockType, blockIndex) {
+                // The image is based on the first ("upright") orientation
+                var positions = game._shapes[blockType][0];
+                // Find the number of tiles it should have
+                var minX = Math.min(positions[0], positions[2], positions[4], positions[6]);
+                var maxX = Math.max(positions[0], positions[2], positions[4], positions[6]);
+                var minY = Math.min(positions[1], positions[3], positions[5], positions[7]);
+                var maxY = Math.max(positions[1], positions[3], positions[5], positions[7]);
+                var rangeX = maxX - minX + 1;
+                var rangeY = maxY - minY + 1;
+                
+                // X and Y sizes should match. Should.
+                var tileSizeX = image.width / rangeX;
+                var tileSizeY = image.height / rangeY;
+
+                return {
+                  x: tileSizeX * (positions[blockIndex*2]-minX),
+                  y: tileSizeY * Math.abs(minY-positions[blockIndex*2+1]),
+                  w: tileSizeX,
+                  h: tileSizeY
+                };
+              };
+
+              var coords = getCustomBlockImageCoordinates(color, blockType, blockIndex);
+
+              game._ctx.save();
+
+              game._ctx.translate(x, y);
+              game._ctx.translate(game._block_size/2, game._block_size/2);
+              game._ctx.rotate(-Math.PI/2 * blockRotation);
+              game._ctx.drawImage(color,  coords.x, coords.y, coords.w, coords.h, 
+                                          -game._block_size/2, -game._block_size/2, game._block_size, game._block_size);
+              
+              game._ctx.restore();
+
+            } else {
+              // ERROR
+              game._ctx.fillStyle = '#ff0000';
+              game._ctx.fillRect(x, y, game._block_size, game._block_size);
+            }
+          }
+          else if( typeof color === 'string' )
+          {
+            game._ctx.fillStyle = color;
+            game._ctx.fillRect(x, y, game._block_size, game._block_size);
+
+            // Inner Shadow
+            if( typeof game._theme.innerShadow === 'string' ) {
+              game._ctx.globalAlpha = 1.0;
+              game._ctx.strokeStyle = game._theme.innerShadow;
+              game._ctx.lineWidth = 1.0;
+
+              // Draw the borders
+              game._ctx.strokeRect(x+1, y+1, game._block_size-2, game._block_size-2);
+            }
+
+            // Decoration (borders)
+            if( typeof game._theme.stroke === 'string' ) {
+              game._ctx.globalAlpha = 1.0;
+              game._ctx.fillStyle = game._theme.stroke;
+              game._ctx.strokeStyle = game._theme.stroke;
+              game._ctx.lineWidth = borderWidth;
+
+              // Draw the borders
+              game._ctx.strokeRect(x, y, game._block_size, game._block_size);
+            }
+            if( typeof game._theme.innerStroke === 'string' ) {
+              // Draw the inner dashes
+              game._ctx.fillStyle = game._theme.innerStroke;
+              game._ctx.fillRect(x+borderDistance, y+borderDistance, game._block_size-borderDistance*2, borderWidth);
+              // The rects shouldn't overlap, to prevent issues with transparency
+              game._ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, game._block_size-borderDistance*2-borderWidth);
+            }
+            if( typeof game._theme.innerSquare === 'string' ) {
+              // Draw the inner square
+              game._ctx.fillStyle = game._theme.innerSquare;
+              game._ctx.globalAlpha = 0.2;
+              game._ctx.fillRect(x+squareDistance, y+squareDistance, game._block_size-squareDistance*2, game._block_size-squareDistance*2);
+            }
+          }
+
+          // Return the alpha back to 1.0 so we don't create any issues with other drawings.
+          game._ctx.globalAlpha = 1.0;
+        },
+
+
+        getBlockColor: function(blockType, blockVariation, blockIndex, falling) {
+          /**
+           * The theme allows us to do many things:
+           * - Use a specific color for the falling block (primary), regardless of the proper color.
+           * - Use another color for the placed blocks (secondary).
+           * - Default to the "original" block color in any of those cases by setting primary and/or secondary to null.
+           * - With primary and secondary as null, all blocks keep their original colors.
+           */
+
+          var getBlockVariation = function(blockTheme, blockVariation) {
+            if( $.isArray(blockTheme) ) {
+              if( blockVariation !== null && typeof blockTheme[blockVariation] !== 'undefined' ) {
+                return blockTheme[blockVariation];
+              } 
+              else if(blockTheme.length > 0) {
+                return blockTheme[0];
+              } else {
+                return null;
+              }
+            } else {
+              return blockTheme;
+            }
+          }
+
+          if( typeof falling !== 'boolean' ){ falling = true; }
+          if( falling ) {
+            if( typeof game._theme.primary === 'string' && game._theme.primary !== '' ) {
+              return game._theme.primary;
+            } else if( typeof game._theme.blocks !== 'undefined' && game._theme.blocks !== null ) {
+              return getBlockVariation(game._theme.blocks[blockType], blockVariation);
+            } else {
+              return getBlockVariation(game._theme.complexBlocks[blockType], blockVariation);
+            }
+          } else {
+            if( typeof game._theme.secondary === 'string' && game._theme.secondary !== '' ) {
+              return game._theme.secondary;
+            } else if( typeof game._theme.blocks !== 'undefined' && game._theme.blocks !== null ) {
+              return getBlockVariation(game._theme.blocks[blockType], blockVariation);
+            } else {
+              return getBlockVariation(game._theme.complexBlocks[blockType], blockVariation);
+            }
+          }
         }
+
       };
 
       game._niceShapes = game._getNiceShapes();
