@@ -149,7 +149,7 @@
       // Setup the theme properly
       if( typeof newTheme === 'string' ) {
         this.options.theme = newTheme;
-        this._theme = BlockrainThemes[newTheme];
+        this._theme = $.extend(true, {}, BlockrainThemes[newTheme]);
       }
       else {
         this.options.theme = null;
@@ -157,7 +157,7 @@
       }
 
       if( typeof this._theme === 'undefined' || this._theme === null ) {
-        this._theme = BlockrainThemes['retro'];
+        this._theme = $.extend(true, {}, BlockrainThemes['retro']);
         this.options.theme = 'retro';
       }
 

@@ -50,6 +50,12 @@
     </div>
   </article>
 
+  <article id="example-slider">
+    <div class="example">
+      <div class="game" id="tetris-demo-2"></div>
+    </div>
+  </article>
+
 </section>
 
 <script src="assets/js/jquery-1.11.1.min.js"></script>
@@ -62,20 +68,14 @@
   var $demo = $('#tetris-demo').blockrain({
     speed: 100,
     theme: 'individual',
-    autoplay: true,
-    onStart: function() {
-      
-    },
-    onLine: function() {
-      
-    },
-    onGameOver: function(score){
-      
-    }
+    autoplay: true
   });
 
-  $demo.blockrain('autoplay', true);
-  $demo.blockrain('touchControls', true);
+  var $demo2 = $('#tetris-demo-2').blockrain({
+    speed: 100,
+    theme: 'individual',
+    autoplay: true
+  });
 
 </script>
 
