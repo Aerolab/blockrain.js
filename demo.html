@@ -39,12 +39,15 @@
 
 
 <section id="examples">
+
   <header>
-    <h1>Try it yourself!</h1>
+    <h1>Check out the demo</h1>
   </header>
+
   <article id="example-slider">
     <div class="example">
       <div class="game" id="tetris-demo"></div>
+      <div class="game" id="tetris-demo-2"></div>
     </div>
   </article>
 
@@ -58,17 +61,15 @@
 <script>
 
   var $demo = $('#tetris-demo').blockrain({
-    speed: 20,
-    theme: 'vim',
-    onStart: function() {
-      
-    },
-    onLine: function() {
-      
-    },
-    onGameOver: function(score){
-      
-    }
+    speed: 100,
+    theme: 'individual',
+    autoplay: true
+  });
+
+  var $demo2 = $('#tetris-demo-2').blockrain({
+    speed: 100,
+    theme: 'individual',
+    autoplay: true
   });
 
 </script>
