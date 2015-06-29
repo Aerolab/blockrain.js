@@ -1380,7 +1380,8 @@
         if( ! start ) { game._board.holding.left = null; return; }
         if( ! game._board.holding.left ) {
           game._board.cur.moveLeft(); 
-          game._board.holding.left = Date.now(); 
+          game._board.holding.left = Date.now();
+          game._board.holding.right = null; 
         }
       }
       var moveRight = function(start) {
@@ -1388,6 +1389,7 @@
         if( ! game._board.holding.right ) {
           game._board.cur.moveRight(); 
           game._board.holding.right = Date.now(); 
+          game._board.holding.left = null; 
         }
       }
       var drop = function(start) {
@@ -1501,11 +1503,15 @@
         event.preventDefault();
         game._board.cur.moveLeft();
         game._board.holding.left = Date.now();
+        game._board.holding.right = null;
+        game._board.holding.drop = null;
       };
       var moveRight = function(event){
         event.preventDefault();
         game._board.cur.moveRight();
         game._board.holding.right = Date.now();
+        game._board.holding.left = null;
+        game._board.holding.drop = null;
       };
       var drop = function(event){
         event.preventDefault();
