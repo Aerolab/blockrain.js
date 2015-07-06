@@ -28,6 +28,8 @@
       onRestart: function(){},
       onGameOver: function(score){},
 
+      // When a block is placed
+      onPlaced: function(){},
       // When a line is made. Returns the number of lines, score assigned and total score
       onLine: function(lines, scoreIncrement, score){}
     },
@@ -802,6 +804,13 @@
                 game._filled.checkForClears();
                 this.cur = this.nextShape();
                 this.renderChanged = true;
+
+                // Stop holding drop (and any other buttons). Just in case the controls get sticky.
+                this.holding.left = null;
+                this.holding.right = null;
+                this.holding.drop = null;
+
+                game.options.onPlaced.call(game.element);
               }
             }
           }
