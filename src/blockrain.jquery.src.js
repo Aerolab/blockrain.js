@@ -771,7 +771,7 @@
               var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
               if (game._checkCollisions(x, y+1, blocks, true)) {
                 drop = false;
-                game.options.onPlace.call(this.cur);
+                game.options.onPlace.call(game.element, this.cur);
                 for (var i=0; i<cur.blocksLen; i+=2) {
                   game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
                   if (y + blocks[i] < 0) {
