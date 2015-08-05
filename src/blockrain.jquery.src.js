@@ -27,6 +27,7 @@
       onStart: function(){},
       onRestart: function(){},
       onGameOver: function(score){},
+      onPlace: function() {},
 
       // When a line is made. Returns the number of lines, score assigned and total score
       onLine: function(lines, scoreIncrement, score){}
@@ -265,8 +266,8 @@
             var cx = x * this._block_size;
             var cy = y * this._block_size;
 
-            this._ctx.drawImage( this._theme.backgroundGrid, 
-                            0, 0, this._theme.backgroundGrid.width, this._theme.backgroundGrid.height, 
+            this._ctx.drawImage( this._theme.backgroundGrid,
+                            0, 0, this._theme.backgroundGrid.width, this._theme.backgroundGrid.height,
                             cx, cy, this._block_size, this._block_size);
           }
         }
@@ -299,7 +300,7 @@
 
     /**
      * Draws one block (Each piece is made of 4 blocks)
-     * The blockType is used to draw any block. 
+     * The blockType is used to draw any block.
      * The falling attribute is needed to apply different styles for falling and placed blocks.
      */
     _drawBlock: function(x, y, blockType, falling) {
@@ -770,6 +771,7 @@
               var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
               if (game._checkCollisions(x, y+1, blocks, true)) {
                 drop = false;
+                game.options.onPlace.call(this.cur);
                 for (var i=0; i<cur.blocksLen; i+=2) {
                   game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
                   if (y + blocks[i] < 0) {
