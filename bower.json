@@ -1,8 +1,11 @@
 {
   "name": "blockrain",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Add a game of tetris to your site",
   "main": "dist/blockrain.jquery.min.js",
+  "dependencies": {
+    "jquery": "~1.11.3"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/Aerolab/blockrain.js.git"

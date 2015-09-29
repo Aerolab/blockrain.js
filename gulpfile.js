@@ -1,5 +1,6 @@
 var gulp = require('gulp'),
 fs = require('fs'),
+clean = require("gulp-clean"),
 uglify = require("gulp-uglify"),
 concat = require("gulp-concat"),
 header = require("gulp-header"),
@@ -32,22 +33,34 @@ gulp.task('css', function () {
     .pipe(gulp.dest('./dist'));
 });
 
+gulp.task('blocks', function () {
+    // CSS
+    return gulp.src(['./assets/blocks/custom/*.*'])
+    .pipe(gulp.dest('./dist/assets/blocks/custom'));
+});
+
 gulp.task('readme', function () {
     // Readme
     return gulp.src(['./README.md'])
     .pipe(gulp.dest('./dist'));
 });
 
+gulp.task('clean', function () {
+    return gulp.src('./dist', {read: false})
+    .pipe(clean());
+});
+
 gulp.task('dist', function () {
     // Create a ZIP File
-    return gulp.src(['./dist/blockrain.jquery.js', './dist/blockrain.jquery.min.js', './dist/blockrain.css'])
+    return gulp.src(['./dist/**/*.*'])
     .pipe(zip('blockrain.zip'))
     .pipe(gulp.dest('./dist'));
 });
 
 
 gulp.task('build', function(callback){
-  runSequence('js', 'css', 'readme', 'dist',
+  runSequence('clean', 
+              'js', 'css', 'blocks', 'readme', 'dist',
               callback);
 });
 

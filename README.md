@@ -77,8 +77,36 @@ Here's an example of a retro theme (vim) with a **custom texture**:
 }
 ```
 
+
+### Creating custom designs
+
+You can now use **completely custom designs for each block**! You just link to one image for each block when creating your theme and the plugin takes care of the rest. You can even use lists of images if you want BlockRain to pick a random design for each block.
+
+**Keep in mind that the images need to follow the exact same format (rotation and width/height ratio) as [the blocks that are bundled with the custom theme](https://github.com/Aerolab/blockrain.js/tree/gh-pages/assets/blocks/custom)**.
+
+Fun fact: Now you can rotate the square!
+
+
+```js
+'custom': {
+  background: '#040304',
+  backgroundGrid: '#000',
+  complexBlocks: {
+    line:     ['assets/blocks/custom/line.png', 'assets/blocks/custom/line.png'],
+    square:   'assets/blocks/custom/square.png',
+    arrow:    'assets/blocks/custom/arrow.png',
+    rightHook:'assets/blocks/custom/rightHook.png',
+    leftHook: 'assets/blocks/custom/leftHook.png',
+    rightZag: 'assets/blocks/custom/rightZag.png',
+    leftZag:  'assets/blocks/custom/leftZag.png'
+  }
+}
+```
+
+
 ### Available themes:
 
+* custom **NEW!**
 * candy
 * modern
 * retro

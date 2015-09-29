@@ -7,6 +7,70 @@
   line-height: 140%;
 }
 
+/* Touch Controls */
+.blockrain-touch {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  display: block;
+  border-radius: 100%;
+  border: 1px solid white;
+  background: rgba(255,255,255,0.2);
+  z-index: 10;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  line-height: 50px;
+  text-align: center;
+}
+.blockrain-touch:active {
+  background: rgba(255,255,255,0.3);
+}
+
+.blockrain-touch-left {
+  left: -60px;
+  bottom: 10px;
+}
+.blockrain-touch-left::after {
+  content: "<";
+}
+.blockrain-touch-right {
+  right: -60px;
+  bottom: 10px;
+}
+.blockrain-touch-right::after {
+  content: ">";
+}
+
+.blockrain-touch-rotate-left {
+  left: -60px;
+  bottom: 80px;
+}
+.blockrain-touch-rotate-left::after {
+  content: "<o";
+}
+
+.blockrain-touch-rotate-right {
+  right: -60px;
+  bottom: 80px;
+}
+.blockrain-touch-rotate-right::after {
+  content: "o>";
+}
+
+.blockrain-touch-drop {
+  left: 50%;
+  margin-left: -25px;
+  bottom: -60px;
+}
+.blockrain-touch-drop::after {
+  content: ".";
+}
+
 /* Buttons */
 .blockrain-btn {
   position: relative;
