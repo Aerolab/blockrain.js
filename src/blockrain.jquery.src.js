@@ -28,6 +28,8 @@
       onRestart: function(){},
       onGameOver: function(score){},
 
+      // When a block is placed
+      onPlaced: function(){},
       // When a line is made. Returns the number of lines, score assigned and total score
       onLine: function(lines, scoreIncrement, score){}
     },
@@ -58,6 +60,8 @@
       this._board.cur = this._board.nextShape();
       this._board.started = true;
       this._board.gameover = false;
+      this._board.dropDelay = 5;
+      this._board.render(true);
       this._board.animate();
 
       this._$start.fadeOut(150);
@@ -83,11 +87,17 @@
         this._doStart();
       }
       this._setupControls( ! enable );
+      this._setupTouchControls( ! enable );
     },
 
     controls: function(enable) {
       if( typeof enable !== 'boolean' ){ enable = true; }
       this._setupControls(enable);
+    },
+
+    touchControls: function(enable) {
+      if( typeof enable !== 'boolean' ){ enable = true; }
+      this._setupTouchControls(enable);
     },
 
     score: function(newScore) {
@@ -96,6 +106,10 @@
         this._$scoreText.text(this._filled_score);
       }
       return this._filled.score;
+    },
+
+    freesquares: function() {
+      return this._filled.getFreeSpaces();
     },
 
     showStartMessage: function() {
@@ -138,7 +152,7 @@
       // Setup the theme properly
       if( typeof newTheme === 'string' ) {
         this.options.theme = newTheme;
-        this._theme = BlockrainThemes[newTheme];
+        this._theme = $.extend(true, {}, BlockrainThemes[newTheme]);
       }
       else {
         this.options.theme = null;
@@ -146,7 +160,7 @@
       }
 
       if( typeof this._theme === 'undefined' || this._theme === null ) {
-        this._theme = BlockrainThemes['retro'];
+        this._theme = $.extend(true, {}, BlockrainThemes['retro']);
         this.options.theme = 'retro';
       }
 
@@ -213,14 +227,21 @@
       this._info.init();
       this._board.init();
 
+      var renderLoop = function(){
+        requestAnimationFrame(renderLoop);
+        game._board.render();
+      };
+      renderLoop();
+
       if( this.options.autoplay ) {
         this.autoplay(true);
+        this._setupTouchControls(false);
       } else {
         this._setupControls(true);
+        this._setupTouchControls(false);
       }
 
     },
-
 
     _checkCollisions: function(x, y, blocks, checkDownOnly) {
       // x & y should be aspirational values
@@ -265,9 +286,9 @@
             var cx = x * this._block_size;
             var cy = y * this._block_size;
 
-            this._ctx.drawImage( this._theme.backgroundGrid, 
-                            0, 0, this._theme.backgroundGrid.width, this._theme.backgroundGrid.height, 
-                            cx, cy, this._block_size, this._block_size);
+            this._ctx.drawImage(  this._theme.backgroundGrid, 
+                                  0, 0, this._theme.backgroundGrid.width, this._theme.backgroundGrid.height, 
+                                  cx, cy, this._block_size, this._block_size);
           }
         }
 
@@ -296,113 +317,96 @@
     },
 
 
-
-    /**
-     * Draws one block (Each piece is made of 4 blocks)
-     * The blockType is used to draw any block. 
-     * The falling attribute is needed to apply different styles for falling and placed blocks.
-     */
-    _drawBlock: function(x, y, blockType, falling) {
-
-      // convert x and y to pixel
-      x = x * this._block_size;
-      y = y * this._block_size;
-
-      falling = typeof falling === 'boolean' ? falling : false;
-      var borderWidth = this._theme.strokeWidth;
-      var borderDistance = Math.round(this._block_size*0.23);
-      var squareDistance = Math.round(this._block_size*0.30);
-
-      var color = this._getBlockColor(blockType, falling);
-
-      // Draw the main square
-      this._ctx.globalAlpha = 1.0;
-
-      // If it's an image, the block has a specific texture. Use that.
-      if( color instanceof Image ) {
-        this._ctx.globalAlpha = 1.0;
-
-        // Not loaded
-        if( color.width === 0 || color.height === 0 ){ return; }
-
-        this._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, this._block_size, this._block_size);
-
-      }
-      else if( typeof color === 'string' )
-      {
-        this._ctx.fillStyle = color;
-        this._ctx.fillRect(x, y, this._block_size, this._block_size);
-
-        // Inner Shadow
-        if( typeof this._theme.innerShadow === 'string' ) {
-          this._ctx.globalAlpha = 1.0;
-          this._ctx.strokeStyle = this._theme.innerShadow;
-          this._ctx.lineWidth = 1.0;
-
-          // Draw the borders
-          this._ctx.strokeRect(x+1, y+1, this._block_size-2, this._block_size-2);
-        }
-
-        // Decoration (borders)
-        if( typeof this._theme.stroke === 'string' ) {
-          this._ctx.globalAlpha = 1.0;
-          this._ctx.fillStyle = this._theme.stroke;
-          this._ctx.strokeStyle = this._theme.stroke;
-          this._ctx.lineWidth = borderWidth;
-
-          // Draw the borders
-          this._ctx.strokeRect(x, y, this._block_size, this._block_size);
-        }
-        if( typeof this._theme.innerStroke === 'string' ) {
-          // Draw the inner dashes
-          this._ctx.fillStyle = this._theme.innerStroke;
-          this._ctx.fillRect(x+borderDistance, y+borderDistance, this._block_size-borderDistance*2, borderWidth);
-          // The rects shouldn't overlap, to prevent issues with transparency
-          this._ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, this._block_size-borderDistance*2-borderWidth);
-        }
-        if( typeof this._theme.innerSquare === 'string' ) {
-          // Draw the inner square
-          this._ctx.fillStyle = this._theme.innerSquare;
-          this._ctx.globalAlpha = 0.2;
-          this._ctx.fillRect(x+squareDistance, y+squareDistance, this._block_size-squareDistance*2, this._block_size-squareDistance*2);
-        }
-      }
-
-      // Return the alpha back to 1.0 so we don't create any issues with other drawings.
-      this._ctx.globalAlpha = 1.0;
-    },
-
-
-    _getBlockColor: function(blockName, falling) {
-      /**
-       * The theme allows us to do many things:
-       * - Use a specific color for the falling block (primary), regardless of the proper color.
-       * - Use another color for the placed blocks (secondary).
-       * - Default to the "original" block color in any of those cases by setting primary and/or secondary to null.
-       * - With primary and secondary as null, all blocks keep their original colors.
-       */
-
-      if( typeof falling !== 'boolean' ){ falling = true; }
-      if( falling ) {
-        if( typeof this._theme.primary === 'string' && this._theme.primary !== '' ) {
-          return this._theme.primary;
-        } else {
-          return this._theme.blocks[blockName];
-        }
-      } else {
-        if( typeof this._theme.secondary === 'string' && this._theme.secondary !== '' ) {
-          return this._theme.secondary;
-        } else {
-          return this._theme.blocks[blockName];
-        }
-      }
-    },
-
-
     /**
      * Shapes
      */
     _shapeFactory: null,
+
+    _shapes: {
+      /**
+       * The shapes have a reference point (the dot) and always rotate left.
+       * Keep in mind that the blocks should keep in the same relative position when rotating,
+       * to allow for custom per-block themes.
+       */
+      /*            
+       *   X      
+       *   O  XOXX
+       *   X      
+       *   X
+       *   .   .      
+       */
+      line: [
+          [ 0, -1,   0, -2,   0, -3,   0, -4],
+          [ 2, -2,   1, -2,   0, -2,  -1, -2],
+          [ 0, -4,   0, -3,   0, -2,   0, -1],
+          [-1, -2,   0, -2,   1, -2,   2, -2]
+      ],
+      /*
+       *  XX
+       *  XX
+       */
+      square: [
+        [0,  0,   1,  0,   0, -1,   1, -1],
+        [1,  0,   1, -1,   0,  0,   0, -1],
+        [1, -1,   0, -1,   1,  0,   0,  0],
+        [0, -1,   0,  0,   1, -1,   1,  0]
+      ],
+      /*
+       *    X   X       X
+       *   XOX XO  XOX  OX
+       *   .   .X  .X  .X
+       */
+      arrow: [
+        [0, -1,   1, -1,   2, -1,   1, -2],
+        [1,  0,   1, -1,   1, -2,   0, -1],
+        [2, -1,   1, -1,   0, -1,   1,  0],
+        [1, -2,   1, -1,   1,  0,   2, -1]
+      ],
+      /*
+       *    X    X XX 
+       *    O  XOX  O XOX 
+       *   .XX .   .X X   
+       */
+      rightHook: [
+        [2,  0,   1,  0,   1, -1,   1, -2],
+        [2, -2,   2, -1,   1, -1,   0, -1],
+        [0, -2,   1, -2,   1, -1,   1,  0],
+        [0,  0,   0, -1,   1, -1,   2, -1]
+      ],
+      /*
+       *    X      XX X  
+       *    O XOX  O  XOX
+       *   XX . X .X  .  
+       */
+      leftHook: [
+        [0,  0,   1,  0,   1, -1,   1, -2],
+        [2,  0,   2, -1,   1, -1,   0, -1],
+        [2, -2,   1, -2,   1, -1,   1,  0],
+        [0, -2,   0, -1,   1, -1,   2, -1]
+      ],
+      /*
+       *    X  XX 
+       *   XO   OX
+       *   X   .  
+       */
+      leftZag: [
+        [0,  0,   0, -1,   1, -1,   1, -2],
+        [2, -1,   1, -1,   1, -2,   0, -2],
+        [1, -2,   1, -1,   0, -1,   0,  0],
+        [0, -2,   1, -2,   1, -1,   2, -1]
+      ],
+      /*
+       *   X    
+       *   XO   OX
+       *   .X  XX   
+       */
+      rightZag: [
+        [1,  0,   1, -1,   0, -1,   0, -2],
+        [2, -1,   1, -1,   1,  0,   0,  0],
+        [0, -2,   0, -1,   1, -1,   1,  0],
+        [0,  0,   1,  0,   1, -1,   2, -1]
+      ]
+    },
 
     _SetupShapeFactory: function(){
       var game = this;
@@ -423,46 +427,63 @@
             });
             return this;
           },
+
           blockType: blockType,
+          blockVariation: null,
           blocksLen: orientations[0].length,
           orientations: orientations,
           orientation: 0, // 4 possible
-          rotate: function(right) {
-            var orientation = (this.orientation + (right ? 1 : -1) + 4) % 4;
+
+          rotate: function(direction) {
+            var orientation = (this.orientation + (direction === 'left' ? 1 : -1) + 4) % 4;
 
             //TODO - when past limit - auto shift and remember that too!
             if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
               this.orientation = orientation;
+              game._board.renderChanged = true;
             }
           },
+
           moveRight: function() {
             if (!game._checkCollisions(this.x + 1, this.y, this.getBlocks())) {
               this.x++;
+              game._board.renderChanged = true;
             }
           },
           moveLeft: function() {
             if (!game._checkCollisions(this.x - 1, this.y, this.getBlocks())) {
               this.x--;
+              game._board.renderChanged = true;
             }
           },
+          drop: function() {
+            if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
+              this.y++;
+              // Reset the drop count, as we dropped the block sooner
+              game._board.dropCount = -1;
+              game._board.animate();
+              game._board.renderChanged = true;
+            }
+          },
+
           getBlocks: function(orientation) { // optional param
             return this.orientations[orientation !== undefined ? orientation : this.orientation];
           },
-          draw: function(drop, _x, _y, _orientation) {
-            if (drop) { this.y++; }
-
+          draw: function(_x, _y, _orientation) {
             var blocks = this.getBlocks(_orientation),
-              x = _x === undefined ? this.x : _x,
-              y = _y === undefined ? this.y : _y,
-              i = 0;
+                x = _x === undefined ? this.x : _x,
+                y = _y === undefined ? this.y : _y,
+                i = 0,
+                index = 0;
 
             for (; i<this.blocksLen; i += 2) {
-              game._drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, true);
+              game._board.drawBlock(x + blocks[i], y + blocks[i+1], this.blockType, this.blockVariation, index, this.orientation, true);
+              index++;
             }
           },
           getBounds: function(_blocks) { // _blocks can be an array of blocks, an orientation index, or undefined
             var blocks = $.isArray(_blocks) ? _blocks : this.getBlocks(_blocks),
-              i=0, len=blocks.length, minx=999, maxx=-999, miny=999, maxy=-999;
+                i=0, len=blocks.length, minx=999, maxx=-999, miny=999, maxy=-999;
             for (; i<len; i+=2) {
               if (blocks[i] < minx) { minx = blocks[i]; }
               if (blocks[i] > maxx) { maxx = blocks[i]; }
@@ -485,82 +506,25 @@
 
       this._shapeFactory = {
         line: function() {
-          /*
-           *   X        X
-           *   O  XOXX  O XOXX
-           *   X        X
-           *   X        X
-           */
-          var ver = [0, -1, 0, -2, 0, -3, 0, -4],
-          hor = [-1, -2, 0, -2, 1, -2, 2, -2];
-          return new Shape(game, [ver, hor, ver, hor], true, 'line');
+          return new Shape(game, game._shapes.line, false, 'line');
         },
         square: function() {
-          /*
-           *  XX
-           *  XX
-           */
-          var s = [0, 0, 1, 0, 0, -1, 1, -1];
-          return new Shape(game, [s, s, s, s], true, 'square');
+          return new Shape(game, game._shapes.square, false, 'square');
         },
         arrow: function() {
-          /*
-           *    X   X       X
-           *   XOX  OX XOX XO
-           *        X   X   X
-           */
-          return new Shape(game, [
-            [0, -1, 1, -1, 2, -1, 1, -2],
-            [1, -2, 1, -1, 1, 0, 2, -1],
-            [0, -1, 1, -1, 2, -1, 1, 0],
-            [0, -1, 1, -1, 1, -2, 1, 0]
-          ], false, 'arrow');
-        },
-        rightHook: function() {
-          /*
-           *       XX   X X
-           *   XOX  O XOX O
-           *   X    X     XX
-           */
-          return new Shape(game, [
-            [0, 0, 0, -1, 1, -1, 2, -1],
-            [0, -2, 1, 0, 1, -1, 1, -2],
-            [0, -1, 1, -1, 2, -1, 2, -2],
-            [0, -2, 0, -1, 0, 0, 1, 0]
-          ], false, 'rightHook');
+          return new Shape(game, game._shapes.arrow, false, 'arrow');
         },
         leftHook: function() {
-          /*
-           *        X X   XX
-           *   XOX  O XOX O
-           *     X XX     X
-           */
-          return new Shape(game, [
-            [2, 0, 0, -1, 1, -1, 2, -1],
-            [0, 0, 1, 0, 1, -1, 1, -2],
-            [0, -2, 0, -1, 1, -1, 2, -1],
-            [0, 0, 0, -1, 0, -2, 1, -2]
-          ], false, 'leftHook');
+          return new Shape(game, game._shapes.leftHook, false, 'leftHook');
+        },
+        rightHook: function() {
+          return new Shape(game, game._shapes.rightHook, false, 'rightHook');
         },
         leftZag: function() {
-          /*
-           *        X
-           *   XO  OX
-           *    XX X
-           */
-          var ver = [0, 0, 0, -1, 1, -1, 1, -2],
-              hor = [0, -1, 1, -1, 1, 0, 2, 0];
-          return new Shape(game, [hor, ver, hor, ver], true, 'leftZag');
+          return new Shape(game, game._shapes.leftZag, false, 'leftZag');
         },
         rightZag: function() {
-          /*
-           *       X
-           *    OX OX
-           *   XX   X
-           */
-          var ver = [0, -2, 0, -1, 1, -1, 1, 0],
-              hor = [0, 0, 1, 0, 1, -1, 2, -1];
-          return new Shape(game, [hor, ver, hor, ver], true, 'rightZag');
+          return new Shape(game, game._shapes.rightZag, false, 'rightZag');
         }
       };
     },
@@ -577,9 +541,20 @@
         check: function(x, y) {
           return this.data[this.asIndex(x, y)];
         },
-        add: function(x, y, blockType) {
+        add: function(x, y, blockType, blockVariation, blockIndex, blockOrientation) {
           if (x >= 0 && x < game._BLOCK_WIDTH && y >= 0 && y < game._BLOCK_HEIGHT) {
-            this.data[this.asIndex(x, y)] = blockType;
+            this.data[this.asIndex(x, y)] = {
+              blockType: blockType, 
+              blockVariation: blockVariation, 
+              blockIndex: blockIndex, 
+              blockOrientation: blockOrientation
+            };
+          }
+        },
+        getFreeSpaces: function() {
+          var count = 0;
+          for( var i=0; i<this.data.length; i++ ) {
+            count += (this.data[i] ? 1 : 0);
           }
         },
         asIndex: function(x, y) {
@@ -607,7 +582,7 @@
           for (i=0, len=this.data.length; i<len; i++) {
             mod = this.asX(i);
             if (mod == 0) count = 0;
-            if (this.data[i] && typeof this.data[i] == 'string') {
+            if (this.data[i] && typeof this.data[i] !== 'undefined' && typeof this.data[i].blockType === 'string') {
               count += 1;
             }
             if (mod == game._BLOCK_WIDTH - 1 && count == game._BLOCK_WIDTH) {
@@ -619,7 +594,7 @@
             this._popRow(rows[i]);
             game._board.lines++;
             if( game._board.lines % 10 == 0 && game._board.dropDelay > 1 ) {
-              //board.dropDelay -= 2;
+              game._board.dropDelay *= 0.9;
             }
           }
 
@@ -644,8 +619,8 @@
           for (var i=0, len=this.data.length, row, color; i<len; i++) {
             if (this.data[i] !== undefined) {
               row = this.asY(i);
-              var blockType = this.data[i];
-              game._drawBlock(this.asX(i), row, blockType);
+              var block = this.data[i];
+              game._board.drawBlock(this.asX(i), row, block.blockType, block.blockVariation, block.blockIndex, block.blockOrientation);
             }
           }
         }
@@ -682,20 +657,29 @@
     _SetupBoard: function() {
 
       var game = this;
-      var info = this._info
+      var info = this._info;
 
       this._board = {
+        // This sets the tick rate for the game
         animateDelay: 1000 / game.options.speed,
+
+        animateTimeoutId: null,
         cur: null,
 
         lines: 0,
 
+        // DropCount increments on each animation frame. After n frames, the piece drops 1 square
+        // By making dropdelay lower (down to 0), the pieces move faster, up to once per tick (animateDelay).
         dropCount: 0,
         dropDelay: 5, //5,
 
+        holding: {left: null, right: null, drop: null},
+        holdingThreshold: 200, // How long do you have to hold a key to make commands repeat (in ms)
 
         started: false,
         gameover: false,
+
+        renderChanged: true,
 
         init: function() {
           this.cur = this.nextShape();
@@ -707,14 +691,16 @@
           }
 
           this.showStartMessage();
-
         },
+
         showStartMessage: function() {
           game._$start.show();
         },
+
         showGameOverMessage: function() {
           game._$gameover.show();
         },
+
         nextShape: function(_set_next_only) {
           var next = this.next,
             func, shape, result;
@@ -749,43 +735,94 @@
             result.x = result.best_x;
           }
 
+          if( typeof game._theme.complexBlocks !== 'undefined' ) {
+            if( $.isArray(game._theme.complexBlocks[result.blockType]) ) {
+              result.blockVariation = game._randInt(0, game._theme.complexBlocks[result.blockType].length-1);
+            } else {
+              result.blockVariation = null;
+            }
+          }
+          else if( typeof game._theme.blocks !== 'undefined' ) {
+            if( $.isArray(game._theme.blocks[result.blockType]) ) {
+              result.blockVariation = game._randInt(0, game._theme.blocks[result.blockType].length-1);
+            } else {
+              result.blockVariation = null;
+            }
+          }
+
           return result;
         },
+
         animate: function() {
           var drop = false,
-            gameOver = false;
+              moved = false,
+              gameOver = false,
+              now = Date.now();
+
+          if( this.animateTimeoutId ){ clearTimeout(this.animateTimeoutId); }
 
           //game.updateSizes();
 
           if( !this.paused && !this.gameover ) {
 
             this.dropCount++;
-            if( this.dropCount >= this.dropDelay || game.options.autoplay ) {
+            
+            // Drop by delay or holding
+            if( (this.dropCount >= this.dropDelay) || 
+                (game.options.autoplay) || 
+                (this.holding.drop && (now - this.holding.drop) >= this.holdingThreshold) ) {
               drop = true;
+            moved = true;
               this.dropCount = 0;
             }
 
-            // test for a collision
+            // Move Left by holding
+            if( this.holding.left && (now - this.holding.left) >= this.holdingThreshold ) {
+              moved = true;
+              this.cur.moveLeft();
+            }
+
+            // Move Right by holding
+            if( this.holding.right && (now - this.holding.right) >= this.holdingThreshold ) {
+              moved = true;
+              this.cur.moveRight();
+            }
+
+            // Test for a collision, add the piece to the filled blocks and fetch the next one
             if (drop) {
               var cur = this.cur, x = cur.x, y = cur.y, blocks = cur.getBlocks();
               if (game._checkCollisions(x, y+1, blocks, true)) {
                 drop = false;
+                var blockIndex = 0;
                 for (var i=0; i<cur.blocksLen; i+=2) {
-                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType);
+                  game._filled.add(x + blocks[i], y + blocks[i+1], cur.blockType, cur.blockVariation, blockIndex, cur.orientation);
                   if (y + blocks[i] < 0) {
                     gameOver = true;
                   }
+                  blockIndex++;
                 }
                 game._filled.checkForClears();
                 this.cur = this.nextShape();
+                this.renderChanged = true;
+
+                // Stop holding drop (and any other buttons). Just in case the controls get sticky.
+                this.holding.left = null;
+                this.holding.right = null;
+                this.holding.drop = null;
+
+                game.options.onPlaced.call(game.element);
               }
             }
+          }
 
-            // Draw the blockrain field
-            game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
-            game._drawBackground();
-            game._filled.draw();
-            this.cur.draw(drop);
+          // Drop
+          if (drop) {
+            moved = true;
+            this.cur.y++;
+          }
+
+          if( drop || moved ) {
+            this.renderChanged = true;
           }
 
           if( gameOver ) {
@@ -798,39 +835,43 @@
               // On autoplay, restart the game automatically
               game.restart();
             }
+            this.renderChanged = true;
 
           } else {
 
             // Update the speed
             this.animateDelay = 1000 / game.options.speed;
 
-            window.setTimeout(function() {
+            this.animateTimeoutId = window.setTimeout(function() {
               game._board.animate();
             }, this.animateDelay);
 
           }
 
         },
+
         createRandomBoard: function() {
 
-          var start = [], blockTypes = [], i, ilen, j, jlen, color;
+          var start = [], blockTypes = [], i, ilen, j, jlen, blockType;
 
           // Draw a random blockrain screen
           blockTypes = Object.keys(game._shapeFactory);
 
           for (i=0, ilen=game._BLOCK_WIDTH; i<ilen; i++) {
             for (j=0, jlen=game._randChoice([game._randInt(0, 8), game._randInt(5, 9)]); j<jlen; j++) {
-              if (!color || !game._randInt(0, 3)) color = game._randChoice(blockTypes);
+              if (!blockType || !game._randInt(0, 3)) blockType = game._randChoice(blockTypes);
 
-              game._filled.add(i, game._BLOCK_HEIGHT - j, color);
+              // Use a random piece and orientation
+              // Todo: Use an actual random variation
+              game._filled.add(i, game._BLOCK_HEIGHT - j, blockType, game._randInt(0,3), null, game._randInt(0,3));
             }
           }
 
           /*
           for (i=0, ilen=WIDTH; i<ilen; i++) {
             for (j=0, jlen=randChoice([randInt(0, 8), randInt(5, 9)]); j<jlen; j++) {
-              if (!color || !randInt(0, 3)) color = randChoice(blockTypes);
-              start.push([i, HEIGHT - j, color]);
+              if (!blockType || !randInt(0, 3)) blockType = randChoice(blockTypes);
+              start.push([i, HEIGHT - j, blockType]);
             }
           }
 
@@ -842,14 +883,187 @@
           }
           */
 
+          game._board.render(true);
+
         },
 
-        render: function() {
-          game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
-          game._drawBackground();
-          game._filled.draw();
-          this.cur.draw(false);
+        render: function(forceRender) {
+          if( this.renderChanged || forceRender ) {
+            this.renderChanged = false;
+            game._ctx.clearRect(0, 0, game._PIXEL_WIDTH, game._PIXEL_HEIGHT);
+            game._drawBackground();
+            game._filled.draw();
+            this.cur.draw();
+          }
+        },
+
+
+        /**
+         * Draws one block (Each piece is made of 4 blocks)
+         * The blockType is used to draw any block. 
+         * The falling attribute is needed to apply different styles for falling and placed blocks.
+         */
+        drawBlock: function(x, y, blockType, blockVariation, blockIndex, blockRotation, falling) {
+
+          // convert x and y to pixel
+          x = x * game._block_size;
+          y = y * game._block_size;
+
+          falling = typeof falling === 'boolean' ? falling : false;
+          var borderWidth = game._theme.strokeWidth;
+          var borderDistance = Math.round(game._block_size*0.23);
+          var squareDistance = Math.round(game._block_size*0.30);
+
+          var color = this.getBlockColor(blockType, blockVariation, blockIndex, falling);
+
+          // Draw the main square
+          game._ctx.globalAlpha = 1.0;
+
+          // If it's an image, the block has a specific texture. Use that.
+          if( color instanceof Image ) {
+            game._ctx.globalAlpha = 1.0;
+
+            // Not loaded
+            if( color.width === 0 || color.height === 0 ){ return; }
+
+            // A square is the same style for all blocks
+            if( typeof game._theme.blocks !== 'undefined' && game._theme.blocks !== null ) {
+              game._ctx.drawImage(color, 0, 0, color.width, color.height, x, y, game._block_size, game._block_size);
+            }
+            // A custom texture
+            else if( typeof game._theme.complexBlocks !== 'undefined' && game._theme.complexBlocks !== null ) {
+              if( typeof blockIndex === 'undefined' || blockIndex === null ){ blockIndex = 0; }
+
+              var getCustomBlockImageCoordinates = function(image, blockType, blockIndex) {
+                // The image is based on the first ("upright") orientation
+                var positions = game._shapes[blockType][0];
+                // Find the number of tiles it should have
+                var minX = Math.min(positions[0], positions[2], positions[4], positions[6]);
+                var maxX = Math.max(positions[0], positions[2], positions[4], positions[6]);
+                var minY = Math.min(positions[1], positions[3], positions[5], positions[7]);
+                var maxY = Math.max(positions[1], positions[3], positions[5], positions[7]);
+                var rangeX = maxX - minX + 1;
+                var rangeY = maxY - minY + 1;
+                
+                // X and Y sizes should match. Should.
+                var tileSizeX = image.width / rangeX;
+                var tileSizeY = image.height / rangeY;
+
+                return {
+                  x: tileSizeX * (positions[blockIndex*2]-minX),
+                  y: tileSizeY * Math.abs(minY-positions[blockIndex*2+1]),
+                  w: tileSizeX,
+                  h: tileSizeY
+                };
+              };
+
+              var coords = getCustomBlockImageCoordinates(color, blockType, blockIndex);
+
+              game._ctx.save();
+
+              game._ctx.translate(x, y);
+              game._ctx.translate(game._block_size/2, game._block_size/2);
+              game._ctx.rotate(-Math.PI/2 * blockRotation);
+              game._ctx.drawImage(color,  coords.x, coords.y, coords.w, coords.h, 
+                                          -game._block_size/2, -game._block_size/2, game._block_size, game._block_size);
+              
+              game._ctx.restore();
+
+            } else {
+              // ERROR
+              game._ctx.fillStyle = '#ff0000';
+              game._ctx.fillRect(x, y, game._block_size, game._block_size);
+            }
+          }
+          else if( typeof color === 'string' )
+          {
+            game._ctx.fillStyle = color;
+            game._ctx.fillRect(x, y, game._block_size, game._block_size);
+
+            // Inner Shadow
+            if( typeof game._theme.innerShadow === 'string' ) {
+              game._ctx.globalAlpha = 1.0;
+              game._ctx.strokeStyle = game._theme.innerShadow;
+              game._ctx.lineWidth = 1.0;
+
+              // Draw the borders
+              game._ctx.strokeRect(x+1, y+1, game._block_size-2, game._block_size-2);
+            }
+
+            // Decoration (borders)
+            if( typeof game._theme.stroke === 'string' ) {
+              game._ctx.globalAlpha = 1.0;
+              game._ctx.fillStyle = game._theme.stroke;
+              game._ctx.strokeStyle = game._theme.stroke;
+              game._ctx.lineWidth = borderWidth;
+
+              // Draw the borders
+              game._ctx.strokeRect(x, y, game._block_size, game._block_size);
+            }
+            if( typeof game._theme.innerStroke === 'string' ) {
+              // Draw the inner dashes
+              game._ctx.fillStyle = game._theme.innerStroke;
+              game._ctx.fillRect(x+borderDistance, y+borderDistance, game._block_size-borderDistance*2, borderWidth);
+              // The rects shouldn't overlap, to prevent issues with transparency
+              game._ctx.fillRect(x+borderDistance, y+borderDistance+borderWidth, borderWidth, game._block_size-borderDistance*2-borderWidth);
+            }
+            if( typeof game._theme.innerSquare === 'string' ) {
+              // Draw the inner square
+              game._ctx.fillStyle = game._theme.innerSquare;
+              game._ctx.globalAlpha = 0.2;
+              game._ctx.fillRect(x+squareDistance, y+squareDistance, game._block_size-squareDistance*2, game._block_size-squareDistance*2);
+            }
+          }
+
+          // Return the alpha back to 1.0 so we don't create any issues with other drawings.
+          game._ctx.globalAlpha = 1.0;
+        },
+
+
+        getBlockColor: function(blockType, blockVariation, blockIndex, falling) {
+          /**
+           * The theme allows us to do many things:
+           * - Use a specific color for the falling block (primary), regardless of the proper color.
+           * - Use another color for the placed blocks (secondary).
+           * - Default to the "original" block color in any of those cases by setting primary and/or secondary to null.
+           * - With primary and secondary as null, all blocks keep their original colors.
+           */
+
+          var getBlockVariation = function(blockTheme, blockVariation) {
+            if( $.isArray(blockTheme) ) {
+              if( blockVariation !== null && typeof blockTheme[blockVariation] !== 'undefined' ) {
+                return blockTheme[blockVariation];
+              } 
+              else if(blockTheme.length > 0) {
+                return blockTheme[0];
+              } else {
+                return null;
+              }
+            } else {
+              return blockTheme;
+            }
+          }
+
+          if( typeof falling !== 'boolean' ){ falling = true; }
+          if( falling ) {
+            if( typeof game._theme.primary === 'string' && game._theme.primary !== '' ) {
+              return game._theme.primary;
+            } else if( typeof game._theme.blocks !== 'undefined' && game._theme.blocks !== null ) {
+              return getBlockVariation(game._theme.blocks[blockType], blockVariation);
+            } else {
+              return getBlockVariation(game._theme.complexBlocks[blockType], blockVariation);
+            }
+          } else {
+            if( typeof game._theme.secondary === 'string' && game._theme.secondary !== '' ) {
+              return game._theme.secondary;
+            } else if( typeof game._theme.blocks !== 'undefined' && game._theme.blocks !== null ) {
+              return getBlockVariation(game._theme.blocks[blockType], blockVariation);
+            } else {
+              return getBlockVariation(game._theme.complexBlocks[blockType], blockVariation);
+            }
+          }
         }
+
       };
 
       game._niceShapes = game._getNiceShapes();
@@ -866,31 +1080,71 @@
      */
     _preloadThemeAssets: function() {
 
-      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');;
+      var game = this;
 
-      if( typeof this._theme.blocks !== 'undefined' ){
+      var hexColorcheck = new RegExp('^#[A-F0-9+]{3,6}', 'i');
+      var base64check = new RegExp('^data:image/(png|gif|jpg);base64,', 'i');
+
+      var handleAssetLoad = function() {
+        // Rerender the board as soon as an asset loads
+        if( game._board ) {
+          game._board.render(true);
+        }
+      };
+
+      var loadAsset = function(src) {
+        var plainSrc = src;
+        if( ! hexColorcheck.test( plainSrc ) ) {
+          // It's an image
+          src = new Image();
+          src.src = plainSrc;
+          src.onload = handleAssetLoad;
+        } else {
+          // It's a color
+          src = plainSrc;
+        }
+        return src;
+      };
+
+      var startAssetLoad = function(block) {
+        // Assets can be an array of variation so they can change color/design randomly
+        if( $.isArray(block) && block.length > 0 ) {
+          for( var i=0; i<block.length; i++ ) {
+            block[i] = loadAsset(block[i]);
+          }
+        }
+        else if( typeof block === 'string' ) {
+          block = loadAsset(block);
+        }
+        return block;
+      };
+
+
+      if( typeof this._theme.complexBlocks !== 'undefined' ){
+        var keys = Object.keys(this._theme.complexBlocks);
+
+        // Load the complexBlocks
+        for( var i = 0; i < keys.length; i++ ) {
+          this._theme.complexBlocks[ keys[i] ] = startAssetLoad( this._theme.complexBlocks[ keys[i] ] );
+        }
+      }
+      else if( typeof this._theme.blocks !== 'undefined' ){
         var keys = Object.keys(this._theme.blocks);
 
         // Load the blocks
         for( var i = 0; i < keys.length; i++ ) {
-          this._theme.blocks[ keys[i] ]
-          if( typeof this._theme.blocks[ keys[i] ] === 'string' ) {
-            if( base64check.test( this._theme.blocks[ keys[i] ] ) ) {
-              var base64src = this._theme.blocks[ keys[i] ];
-              this._theme.blocks[ keys[i] ] = new Image();
-              this._theme.blocks[ keys[i] ].src = base64src;
-            }
-          }
+          this._theme.blocks[ keys[i] ] = startAssetLoad( this._theme.blocks[ keys[i] ] );
         }
       }
 
       // Load the bg
       if( typeof this._theme.backgroundGrid !== 'undefined' ){
         if( typeof this._theme.backgroundGrid === 'string' ) {
-          if( base64check.test( this._theme.backgroundGrid ) ) {
-            var base64src = this._theme.backgroundGrid;
+          if( ! hexColorcheck.test( this._theme.backgroundGrid ) ) {
+            var src = this._theme.backgroundGrid;
             this._theme.backgroundGrid = new Image();
-            this._theme.backgroundGrid.src = base64src;
+            this._theme.backgroundGrid.src = src;
+            this._theme.backgroundGrid.onload = handleAssetLoad;
           }
         }
       }
@@ -962,6 +1216,20 @@
         game.restart();
       });
       game._$gameholder.append(game._$gameover);
+
+      this._createControls();
+    },
+
+
+    _createControls: function() {
+
+      var game = this;
+
+      game._$touchLeft = $('<a class="blockrain-touch blockrain-touch-left" />').appendTo(game._$gameholder);
+      game._$touchRight = $('<a class="blockrain-touch blockrain-touch-right" />').appendTo(game._$gameholder);
+      game._$touchRotateRight = $('<a class="blockrain-touch blockrain-touch-rotate-right" />').appendTo(game._$gameholder);
+      game._$touchRotateLeft = $('<a class="blockrain-touch blockrain-touch-rotate-left" />').appendTo(game._$gameholder);
+      game._$touchDrop = $('<a class="blockrain-touch blockrain-touch-drop" />').appendTo(game._$gameholder);
 
     },
 
@@ -1117,32 +1385,85 @@
 
       var game = this;
 
+      var moveLeft = function(start) {
+        if( ! start ) { game._board.holding.left = null; return; }
+        if( ! game._board.holding.left ) {
+          game._board.cur.moveLeft(); 
+          game._board.holding.left = Date.now();
+          game._board.holding.right = null; 
+        }
+      }
+      var moveRight = function(start) {
+        if( ! start ) { game._board.holding.right = null; return; }
+        if( ! game._board.holding.right ) {
+          game._board.cur.moveRight(); 
+          game._board.holding.right = Date.now(); 
+          game._board.holding.left = null; 
+        }
+      }
+      var drop = function(start) {
+        if( ! start ) { game._board.holding.drop = null; return; }
+        if( ! game._board.holding.drop ) {
+          game._board.cur.drop(); 
+          game._board.holding.drop = Date.now();
+        }
+      }
+      var rotateLeft = function() {
+        game._board.cur.rotate('left'); 
+      }
+      var rotateRight = function() {
+        game._board.cur.rotate('right'); 
+      }
+
       // Handlers: These are used to be able to bind/unbind controls
-      var handleKeyPress = function(evt) {
+      var handleKeyDown = function(evt) {
+        if( ! game._board.cur ) { return true; }
         var caught = false;
-        if (game._board.cur) {
-          caught = true;
-          if (game.options.asdwKeys) {
-            switch(evt.keyCode) {
-              case 65: /*a*/   game._board.cur.moveLeft(); break;
-              case 87: /*w*/     game._board.cur.rotate(true); break;
-              case 68: /*d*/  game._board.cur.moveRight(); break;
-              case 83: /*s*/   game._board.dropCount = game._board.dropDelay; break;
-            }
-          }
+
+        caught = true;
+        if (game.options.asdwKeys) {
           switch(evt.keyCode) {
-            case 37: /*left*/   game._board.cur.moveLeft(); break;
-            case 38: /*up*/     game._board.cur.rotate(true); break;
-            case 39: /*right*/  game._board.cur.moveRight(); break;
-            case 40: /*down*/   game._board.dropCount = game._board.dropDelay; break;
-            case 88: /*x*/      game._board.cur.rotate(true); break;
-            case 90: /*z*/      game._board.cur.rotate(false); break;
-            default: caught = false;
+            case 65: /*a*/    moveLeft(true); break;
+            case 68: /*d*/    moveRight(true); break;
+            case 83: /*s*/    drop(true); break;
+            case 87: /*w*/    game._board.cur.rotate('right'); break;
           }
+        }
+        switch(evt.keyCode) {
+          case 37: /*left*/   moveLeft(true); break;
+          case 39: /*right*/  moveRight(true); break;
+          case 40: /*down*/   drop(true); break;
+          case 38: /*up*/     game._board.cur.rotate('right'); break;
+          case 88: /*x*/      game._board.cur.rotate('right'); break;
+          case 90: /*z*/      game._board.cur.rotate('left'); break;
+          default: caught = false;
         }
         if (caught) evt.preventDefault();
         return !caught;
-      }
+      };
+
+
+      var handleKeyUp = function(evt) {
+        if( ! game._board.cur ) { return true; }
+        var caught = false;
+
+        caught = true;
+        if (game.options.asdwKeys) {
+          switch(evt.keyCode) {
+            case 65: /*a*/    moveLeft(false); break;
+            case 68: /*d*/    moveRight(false); break;
+            case 83: /*s*/    drop(false); break;
+          }
+        }
+        switch(evt.keyCode) {
+          case 37: /*left*/   moveLeft(false); break;
+          case 39: /*right*/  moveRight(false); break;
+          case 40: /*down*/   drop(false); break;
+          default: caught = false;
+        }
+        if (caught) evt.preventDefault();
+        return !caught;
+      };
 
       function isStopKey(evt) {
         var cfg = {
@@ -1156,34 +1477,100 @@
 
       function getKey(evt) { return 'safekeypress.' + evt.keyCode; }
 
-      function keypress(evt) {
-        var key = getKey(evt),
-            val = ($.data(this, key) || 0) + 1;
-        $.data(this, key, val);
-        if (val > 0) return handleKeyPress.call(this, evt);
-        return isStopKey(evt);
-      }
-
       function keydown(evt) {
         var key = getKey(evt);
         $.data(this, key, ($.data(this, key) || 0) - 1);
-        return handleKeyPress.call(this, evt);
+        return handleKeyDown.call(this, evt);
       }
 
       function keyup(evt) {
         $.data(this, getKey(evt), 0);
+        handleKeyUp.call(this, evt);
         return isStopKey(evt);
       }
 
       // Unbind everything by default
       // Use event namespacing so we don't ruin other keypress events
-      $(document).unbind('keypress.blockrain').unbind('keydown.blockrain').unbind('keyup.blockrain');
+      $(document) .unbind('keydown.blockrain')
+                  .unbind('keyup.blockrain');
 
       if( ! game.options.autoplay ) {
         if( enable ) {
-          $(document).bind('keypress.blockrain', keypress).bind('keydown.blockrain', keydown).bind('keyup.blockrain', keyup);
+          $(document) .bind('keydown.blockrain', keydown)
+                      .bind('keyup.blockrain', keyup);
         }
       }
+    },
+
+
+    _setupTouchControls: function(enable) {
+
+      var game = this;
+
+      // Movements can be held for faster movement
+      var moveLeft = function(event){
+        event.preventDefault();
+        game._board.cur.moveLeft();
+        game._board.holding.left = Date.now();
+        game._board.holding.right = null;
+        game._board.holding.drop = null;
+      };
+      var moveRight = function(event){
+        event.preventDefault();
+        game._board.cur.moveRight();
+        game._board.holding.right = Date.now();
+        game._board.holding.left = null;
+        game._board.holding.drop = null;
+      };
+      var drop = function(event){
+        event.preventDefault();
+        game._board.cur.drop();
+        game._board.holding.drop = Date.now();
+      };
+      var endMoveLeft = function(event){
+        event.preventDefault();
+        game._board.holding.left = null;
+      };
+      var endMoveRight = function(event){
+        event.preventDefault();
+        game._board.holding.right = null;
+      };
+      var endDrop = function(event){
+        event.preventDefault();
+        game._board.holding.drop = null;
+      };
+
+      // Rotations can't be held
+      var rotateLeft = function(event){
+        event.preventDefault();
+        game._board.cur.rotate('left');
+      };
+      var rotateRight = function(event){
+        event.preventDefault();
+        game._board.cur.rotate('right');
+      };
+
+      // Unbind everything by default
+      game._$touchLeft.unbind('touchstart touchend click');
+      game._$touchRight.unbind('touchstart touchend click');
+      game._$touchRotateLeft.unbind('touchstart touchend click');
+      game._$touchRotateRight.unbind('touchstart touchend click');
+      game._$touchDrop.unbind('touchstart touchend click');
+
+      if( ! game.options.autoplay && enable ) {
+        game._$touchLeft.show().bind('touchstart click', moveLeft).bind('touchend', endMoveLeft);
+        game._$touchRight.show().bind('touchstart click', moveRight).bind('touchend', endMoveRight);
+        game._$touchDrop.show().bind('touchstart click', drop).bind('touchend', endDrop);
+        game._$touchRotateLeft.show().bind('touchstart click', rotateLeft);
+        game._$touchRotateRight.show().bind('touchstart click', rotateRight);
+      } else {
+        game._$touchLeft.hide();
+        game._$touchRight.hide();
+        game._$touchRotateLeft.hide();
+        game._$touchRotateRight.hide();
+        game._$touchDrop.hide();
+      }
+
     }
 
   });
