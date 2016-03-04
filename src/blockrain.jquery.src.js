@@ -1499,9 +1499,36 @@
           $(document) .bind('keydown.blockrain', keydown)
                       .bind('keyup.blockrain', keyup);
         }
+        this._setupMobileCommand();
       }
     },
 
+    _setupMobileCommand: function() {
+        var game = this;
+
+        if (window.DeviceMotionEvent !== undefined) {
+            window.ondevicemotion = function(event) {
+                var accX = Math.round(event.accelerationIncludingGravity.x * 10) / 10;
+                var accZ = Math.round(event.accelerationIncludingGravity.z * 10) / 10;
+
+                if (Math.round(accZ) > 4) {
+                    game._board.cur.drop();
+                }
+
+                if (Math.round(accX) > 1) {
+                    game._board.cur.moveLeft();
+                }
+
+                if (Math.round(accX) < -1) {
+                    game._board.cur.moveRight();
+                }
+            };
+        }
+
+        $('body').click(function() {
+            game._board.cur.rotate('right');
+        });
+    },
 
     _setupTouchControls: function(enable) {
 
