@@ -21,7 +21,7 @@ Then you just include **jquery** and **blockrain** and setup the game with **$('
 
 ```html
 <!-- The stylesheet should go in the <head>, or be included in your CSS -->
-<link rel="stylesheet" src="blockrain.css">
+<link rel="stylesheet" href="blockrain.css">
 
 <!-- jQuery and Blockrain.js -->
 <script src="jquery.js"></script>
