@@ -27,6 +27,7 @@
       difficulty: 'normal', // Difficulty (normal|nice|evil).
       speed: 20, // The speed of the game. The higher, the faster the pieces go.
       asdwKeys: true, // Enable ASDW keys
+      scores: [0,400,1000,3000,12000],
 
       // Copy
       playText: 'Let\'s play some Tetris',
@@ -614,9 +615,10 @@
           this._updateScore(clearedLines);
         },
         _updateScore: function(numLines) {
-          if( numLines <= 0 ) { return; }
-          var scores = [0,400,1000,3000,12000];
+          var scores = game.options.scores;
+
           if( numLines >= scores.length ){ numLines = scores.length-1 }
+          if( scores[numLines] == 0 ) return;
 
           this.score += scores[numLines];
           game._$scoreText.text(this.score);
