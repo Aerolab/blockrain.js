@@ -484,19 +484,18 @@
               game._board.dropCount = -1;
               game._board.animate();
               game._board.renderChanged = true;
-
-
             }
           },
 
           quickDrop: function () {
-            this.y = 20;
-            for (let i = this.y; i > 0; i--) {
-              if (game._checkCollisions(this.x, this.y, this.getBlocks())) {
-                this.y = i--;
+            for (let i = this.y; i < game._BLOCK_HEIGHT; i++) {
+              if ( ! game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
+                this.y = i;
               }
             }
+            
             game._board.renderChanged = true;
+            game._board.firstPress = true;
           },
 
           getBlocks: function (orientation) { // optional param
@@ -739,6 +738,7 @@
         nextShape: function (_set_next_only) {
           var next = this.next,
             func, shape, result;
+
 
           if (info.mode == 'nice' || info.mode == 'evil') {
             func = game._niceShapes;
@@ -1436,23 +1436,28 @@
         }
       }
 
-      
+
 
       var drop = function (start) {
         if (!start) { game._board.holding.drop = null; return; }
+
+        
+
         if (!game._board.holding.drop) {
           if (game._board.firstPress) {
             game._board.cur.drop();
             game._board.holding.drop = Date.now();
-            game._board.firstPress = false;
-            setTimeout(function () {
-              game._board.firstPress = true;
-            }, game.options.doublePressTime);
           } else {
             game._board.cur.quickDrop();
           }
 
         }
+        setTimeout(function () {
+          game._board.firstPress = true;
+        }, game.options.doublePressTime);
+
+        game._board.firstPress = false;
+        
       }
       var rotateLeft = function () {
         game._board.cur.rotate('left');
