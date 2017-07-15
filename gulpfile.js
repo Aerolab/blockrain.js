@@ -76,7 +76,7 @@ gulp.task('browserSync', function() {
 
 gulp.task('live', ['browserSync'], function(){
   gulp.watch('*.html', browserSync.reload);
-  gulp.watch('/src/*.js', browserSync.reload);
+  gulp.watch('./src/*.js', browserSync.reload);
 });
 
 gulp.task('default', ['build']);
