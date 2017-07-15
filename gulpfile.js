@@ -5,7 +5,8 @@ uglify = require("gulp-uglify"),
 concat = require("gulp-concat"),
 header = require("gulp-header"),
 zip = require("gulp-zip"),
-runSequence = require('run-sequence');
+runSequence = require('run-sequence'),
+browserSync = require('browser-sync').create();
  
 var getVersion = function () {
     info = require("./package.json");
@@ -62,6 +63,20 @@ gulp.task('build', function(callback){
   runSequence('clean', 
               'js', 'css', 'blocks', 'readme', 'dist',
               callback);
+});
+
+gulp.task('browserSync', function() {
+  browserSync.init({
+    server: {
+      baseDir: './'
+    },
+  })
+})
+
+
+gulp.task('live', ['browserSync'], function(){
+  gulp.watch('*.html', browserSync.reload);
+  gulp.watch('/src/*.js', browserSync.reload);
 });
 
 gulp.task('default', ['build']);

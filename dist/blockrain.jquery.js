@@ -21,7 +21,7 @@
       autoplayRestart: true, // Restart the game automatically once a bot loses
       showFieldOnStart: true, // Show a bunch of random blocks on the start screen (it looks nice)
       theme: null, // The theme name or a theme object
-      blockWidth: 10, // How many blocks wide the field is (The standard is 10 blocks)
+      blockWidth: 12, // How many blocks wide the field is (The standard is 10 blocks)
       autoBlockWidth: false, // The blockWidth is dinamically calculated based on the autoBlockSize. Disabled blockWidth. Useful for responsive backgrounds
       autoBlockSize: 24, // The max size of a block for autowidth mode
       difficulty: 'normal', // Difficulty (normal|nice|evil).
@@ -449,9 +449,29 @@
           rotate: function(direction) {
             var orientation = (this.orientation + (direction === 'left' ? 1 : -1) + 4) % 4;
 
-            //TODO - when past limit - auto shift and remember that too!
             if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
               this.orientation = orientation;
+              game._board.renderChanged = true;
+            } else {
+              this.orientation = orientation;
+              
+              while ( this.x >= ( game._BLOCK_WIDTH - 2 )){
+                this.x--;
+              } 
+              while (this.x < 0){
+                this.x++;
+              }
+              if (this.blockType === "line" && this.x === 0) this.x++           
+              
+              //If there is vertical collision after rotation, piece will go up as much as needed.
+              
+              if (game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
+                for(let i = this.y; i > 0; i--) {
+                  if (game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
+                    this.y = i--;
+                  }
+                }
+              }
               game._board.renderChanged = true;
             }
           },

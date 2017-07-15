@@ -4,6 +4,7 @@
   "description": "Add a game of tetris to your site",
   "main": "dist/blockrain.jquery.min.js",
   "dependencies": {
+    "browser-sync": "^2.18.12",
     "jquery": "~1.11.3"
   },
   "devDependencies": {
