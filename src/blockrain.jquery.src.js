@@ -15,6 +15,7 @@
       difficulty: 'normal', // Difficulty (normal|nice|evil).
       speed: 20, // The speed of the game. The higher, the faster the pieces go.
       asdwKeys: true, // Enable ASDW keys
+      quickDrop: true, // Enable quick drop (double-pressing drop button for instant drop)
       doublePressTime: 500, // Sets the time window for double-pressing the drop
 
       // Copy
@@ -489,13 +490,12 @@
 
           quickDrop: function () {
             for (let i = this.y; i < game._BLOCK_HEIGHT; i++) {
-              if ( ! game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
+              if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
                 this.y = i;
               }
             }
-            
             game._board.renderChanged = true;
-            game._board.firstPress = true;
+            game._board.dropFirstPress = true;
           },
 
           getBlocks: function (orientation) { // optional param
@@ -705,7 +705,7 @@
         dropCount: 0,
         dropDelay: 5, //5,
 
-        firstPress: true,
+        dropFirstPress: true,
 
         holding: { left: null, right: null, drop: null },
         holdingThreshold: 200, // How long do you have to hold a key to make commands repeat (in ms)
@@ -1441,23 +1441,22 @@
       var drop = function (start) {
         if (!start) { game._board.holding.drop = null; return; }
 
-        
-
         if (!game._board.holding.drop) {
-          if (game._board.firstPress) {
+          if (game._board.dropFirstPress) {
             game._board.cur.drop();
             game._board.holding.drop = Date.now();
           } else {
-            game._board.cur.quickDrop();
+            if (game.options.quickDrop) game._board.cur.quickDrop();
           }
+          setTimeout(function () {
+            game._board.dropFirstPress = true;
+          }, game.options.doublePressTime);
+          game._board.dropFirstPress = false;
 
         }
-        setTimeout(function () {
-          game._board.firstPress = true;
-        }, game.options.doublePressTime);
 
-        game._board.firstPress = false;
-        
+
+
       }
       var rotateLeft = function () {
         game._board.cur.rotate('left');
