@@ -468,7 +468,7 @@
           },
 
           quickDrop: function () {
-            for (let i = this.y; i < game._BLOCK_HEIGHT; i++) {
+            for (var i = this.y; i < game._BLOCK_HEIGHT; i++) {
               if (!game._checkCollisions(this.x, this.y + 1, this.getBlocks())) {
                 this.y = i;
               }

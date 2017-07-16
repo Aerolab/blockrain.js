@@ -5,6 +5,7 @@
   "main": "dist/blockrain.jquery.min.js",
   "dependencies": {
     "browser-sync": "^2.18.12",
+    "gulp-util": "^3.0.8",
     "jquery": "~1.11.3"
   },
   "devDependencies": {
