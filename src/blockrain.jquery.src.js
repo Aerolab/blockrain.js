@@ -480,7 +480,7 @@
                     this.orientation = ogOrientation;
                 }
               }
-              game._board.rendesrChanged = true;
+              game._board.renderChanged = true;
             }
           },
 
