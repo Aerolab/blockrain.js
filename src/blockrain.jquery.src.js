@@ -435,11 +435,51 @@
           orientation: 0, // 4 possible
 
           rotate: function(direction) {
-            var orientation = (this.orientation + (direction === 'left' ? 1 : -1) + 4) % 4;
+            var orientation =
+              (this.orientation + (direction === "left" ? 1 : -1) + 4) % 4;
 
-            //TODO - when past limit - auto shift and remember that too!
-            if (!game._checkCollisions(this.x, this.y, this.getBlocks(orientation))) {
+            if (!game._checkCollisions(
+                this.x,
+                this.y,
+                this.getBlocks(orientation)
+              )) {
               this.orientation = orientation;
+              game._board.renderChanged = true;
+            } else {
+              var ogOrientation = this.orientation;
+              var ogX = this.x;
+              var ogY = this.y;
+
+              this.orientation = orientation;
+
+              while (this.x >= game._BLOCK_WIDTH - 2) {
+                this.x--;
+              }
+              while (this.x < 0) {
+                this.x++;
+              }
+
+              if (this.blockType === "line" && this.x === 0) this.x++;
+
+              if ( game._checkCollisions(
+                  this.x,
+                  this.y,
+                  this.getBlocks(orientation)
+                )
+              ) {
+                this.y--;
+                if (
+                    game._checkCollisions(
+                      this.x,
+                      this.y,
+                      this.getBlocks(orientation)
+                    )
+                ) {
+                    this.x = ogX;
+                    this.y = ogY;
+                    this.orientation = ogOrientation;
+                }
+              }
               game._board.renderChanged = true;
             }
           },

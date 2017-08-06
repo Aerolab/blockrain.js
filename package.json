@@ -6,6 +6,9 @@
   "dependencies": {
     "jquery": "~1.11.3"
   },
+  "scripts": {
+    "build": "gulp build"
+  },
   "devDependencies": {
     "gulp": "^3.8.8",
     "gulp-clean": "^0.3.1",
