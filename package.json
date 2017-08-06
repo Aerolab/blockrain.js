@@ -1,6 +1,6 @@
 {
   "name": "blockrain",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Add a game of tetris to your site",
   "main": "dist/blockrain.jquery.min.js",
   "dependencies": {
