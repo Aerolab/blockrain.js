@@ -5,7 +5,9 @@ uglify = require("gulp-uglify"),
 concat = require("gulp-concat"),
 header = require("gulp-header"),
 zip = require("gulp-zip"),
-runSequence = require('run-sequence');
+runSequence = require('run-sequence'),
+browserSync = require('browser-sync').create(),
+gutil = require('gulp-util');
  
 var getVersion = function () {
     info = require("./package.json");
@@ -21,7 +23,7 @@ gulp.task('js', function () {
     .pipe(concat('blockrain.jquery.js'))
     .pipe(header(getCopyright(), {version: getVersion()}))
     .pipe(gulp.dest('./dist'))
-    .pipe(uglify({preserveComments:'none'}))
+    .pipe(uglify({preserveComments:'none'}).on('error', gutil.log))
     .pipe(concat('blockrain.jquery.min.js'))
     .pipe(header(getCopyright(), {version: getVersion()}))
     .pipe(gulp.dest('./dist'));
@@ -62,6 +64,20 @@ gulp.task('build', function(callback){
   runSequence('clean', 
               'js', 'css', 'blocks', 'readme', 'dist',
               callback);
+});
+
+gulp.task('browserSync', function() {
+  browserSync.init({
+    server: {
+      baseDir: './'
+    },
+  })
+})
+
+
+gulp.task('live', ['browserSync'], function(){
+  gulp.watch('*.html', browserSync.reload);
+  gulp.watch('./src/*.js', browserSync.reload);
 });
 
 gulp.task('default', ['build']);

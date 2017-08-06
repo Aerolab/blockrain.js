@@ -39,7 +39,6 @@
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
     ga('create', 'UA-21195039-3', 'aerolab.github.io');
     ga('require', 'displayfeatures');
     ga('require', 'linkid', 'linkid.js');
@@ -172,13 +171,9 @@
 
 
 <!--section class="play">
-
   <h1>Play</h1>
-
   <div class="game" id="tetris-play">
-
   </div>
-
 </section-->
 
 
@@ -209,9 +204,7 @@
     theme: 'candy'
   });
   
-
   var versusSpeed = 100;
-
   var $versus1 = $('#tetris-versus-1 .game').blockrain({
     autoplay: true,
     autoplayRestart: true,
@@ -234,8 +227,6 @@
       $score.text( parseInt($score.text()) + 1 );
     }
   });
-
-
   var $demo = $('#tetris-demo').blockrain({
     speed: 20,
     theme: 'vim',
@@ -249,7 +240,6 @@
       ga( 'send', 'event', 'tetris', 'over', score);
     }
   });
-
   $('#example-slider').find('.btn-next').click(function(event){
     event.preventDefault();
     switchDemoTheme(true);
@@ -258,20 +248,14 @@
     event.preventDefault();
     switchDemoTheme(false);
   });
-
   function switchDemoTheme(next) {
-
     var themes = Object.keys(BlockrainThemes);
-
     var currentTheme = $demo.blockrain('theme');
     var currentIx = themes.indexOf(currentTheme);
-
     if( next ) { currentIx++; }
     else { currentIx--; }
-
     if( currentIx >= themes.length ){ currentIx = 0; }
     if( currentIx < 0 ){ currentIx = themes.length-1; }
-
     $demo.blockrain('theme', themes[currentIx]);
     $('#example-slider .theme strong').text( '"'+themes[currentIx]+'"' );
   }
