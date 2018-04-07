@@ -16,7 +16,7 @@ Create any element (a div, article, figure, whatever you want) and **make sure i
 <div class="game" style="width:250px; height:500px;"></div>
 ```
 
-Then you just include **jquery** and **blockrain** and setup the game with **$('.game').blockrain()**. Adding the CSS file is *strongly recommended*, as it provides some important styles for the UI (but you can customize them as needed).
+Then you include **jquery** and **blockrain** before setting up the game with **$('.game').blockrain()**. Adding the CSS file is *strongly recommended*, as it provides some important styles for the UI (but you can customize them as needed).
 
 
 ```html
@@ -39,7 +39,7 @@ $('.game').blockrain({ autoplay: true, autoplayRestart: true });
 
 # Themes
 
-Blockrain comes with many themes out-of-the-box, but you can create custom ones by **adding them to BlockrainThemes**. You have multiple settings and can even use **custom textures** (base64-encoded).
+Blockrain comes with many themes out-of-the-box. You can even create custom ones by **adding them to BlockrainThemes**. You have multiple settings and can even use **custom textures** (base64-encoded).
 
 ```js
 {
@@ -80,7 +80,7 @@ Here's an example of a retro theme (vim) with a **custom texture**:
 
 ### Creating custom designs
 
-You can now use **completely custom designs for each block**! You just link to one image for each block when creating your theme and the plugin takes care of the rest. You can even use lists of images if you want BlockRain to pick a random design for each block.
+You can now use **completely custom designs for each block**! Just link to one image for each block when creating your theme and the plugin takes care of the rest. You can even use lists of images if you want BlockRain to pick a random design for each block.
 
 **Keep in mind that the images need to follow the exact same format (rotation and width/height ratio) as [the blocks that are bundled with the custom theme](https://github.com/Aerolab/blockrain.js/tree/gh-pages/assets/blocks/custom)**.
 
